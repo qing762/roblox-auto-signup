@@ -22,9 +22,13 @@ def usernamecreator():
         word2 = word2.title()
         username = "{}{}".format(word2, random.randint(1, 99))
         request = HTMLSession()
-        r = request.get(f"https://www.roblox.com/users/profile?username={username}")
-        if r.status_code == 404:
+        r = request.get(
+            f"https://auth.roblox.com/v2/usernames/validate?request.username={username}&request.birthday=04%2F15%2F02&request.context=Signup"
+        ).json
+        if r["code"] == 0:
             return username
+        else:
+            continue
 
 
 passw = "Qing762.chy"
