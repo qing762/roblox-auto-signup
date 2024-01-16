@@ -1,4 +1,7 @@
-> **Warning**
+> [!NOTE]  
+> Join the [Discord server](https://qing762.is-a,dev/discord) for issues. Thanks a lot!
+
+> [!WARNING]
 > Please be advised that usage of this tool is entirely at your own risk. I assumes no responsibility for any adverse consequences that may arise from its use, and users are encouraged to exercise caution and exercise their own judgment in utilizing this tool.
 
 # Roblox auto signup
@@ -41,9 +44,6 @@ python main.py
 ```
 
 And you're all set! Follow the instructions while interacting with the Python file.
-
-## Known issues
-- In rare cases sometimes you get a username is already taken, not sure why this is happening. To fix it, just rerun the script.
 
 ## Contributing
 
