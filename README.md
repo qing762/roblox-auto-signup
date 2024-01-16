@@ -63,7 +63,7 @@ Sadly, no.
 
 ## Feedback / Issues / Request for takedown
 
-If you have any feedback or issues running the code, please reach out to me at [Discord/qing762](https://discord.com/users/635765555277725696)
+If you have any feedback or issues running the code, please join the [Discord server](https://qing762.is-a.dev/discord)
 
 ### FOR ROBLOX CORPORATION EMPLOYEES 
 
