@@ -1,5 +1,5 @@
 > [!NOTE]  
-> Join the [Discord Server](https://discord.gg/3DnxhHy3vg) for issues. Thanks a lot!
+> Join the [Discord server](https://qing762.is-a,dev/discord) for issues. Thanks a lot!
 
 > [!WARNING]
 > Please be advised that usage of this tool is entirely at your own risk. I assumes no responsibility for any adverse consequences that may arise from its use, and users are encouraged to exercise caution and exercise their own judgment in utilizing this tool.
