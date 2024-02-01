@@ -72,3 +72,8 @@ If the company wishes to discontinue or terminate this project, please do not he
 ## Acknoledgement
 
 This project is using a modified version of [Random-Username-Generator by @purry03](https://github.com/purry03/Username-Generator/).
+
+
+## License
+
+[MIT LICENSE](https://choosealicense.com/licenses/mit/)
