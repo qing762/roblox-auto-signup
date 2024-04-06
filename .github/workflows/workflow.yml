@@ -39,6 +39,11 @@ jobs:
         files: .
         dest: release.zip
 
+    - name: Ensuring code is working as expected
+      working-directory: .github/workflows
+      run: |
+        python workflow.py
+
     - name: Publish code
       id: create_release
       uses: softprops/action-gh-release@v1
