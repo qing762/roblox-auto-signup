@@ -69,10 +69,6 @@ If you have any feedback or issues running the code, please join the [Discord se
 
 If the company wishes to discontinue or terminate this project, please do not hesitate to reach out to me. I can be reached at [Discord/qing762](https://discord.com/users/635765555277725696). Thank you for your attention to this matter.
 
-## Acknoledgement
-
-This project is using a modified version of [Random-Username-Generator by @purry03](https://github.com/purry03/Username-Generator/).
-
 
 ## License
 

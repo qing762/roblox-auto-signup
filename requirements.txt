@@ -1,5 +1,2 @@
+DrissionPage==4.0.4.23
 requests_html==0.10.0
-selenium==4.14.0
-selenium_stealth==1.0.6
-seleniumbase==4.20.2
-pybrowsers @ git+https://github.com/roniemartinez/browsers
