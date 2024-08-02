@@ -75,9 +75,11 @@ else:
                 bdaymonthelement.select.by_value("Jan")
             bdaydayelement = page.ele("#DayDropdown")
             if datetime.now().day <= 31:
+                if datetime.now().day <= 9:
+                    bdaydayelement.select.by_value("0" + str(datetime.now().day))
                 bdaydayelement.select.by_value(str(datetime.now().day))
             else:
-                bdaydayelement.select.by_value("1")
+                bdaydayelement.select.by_value("01")
             page.ele("#YearDropdown").select.by_value(str(datetime.now().year - 19))
             username = lib.usernamecreator()
             page.ele("#signup-username").input(username)
