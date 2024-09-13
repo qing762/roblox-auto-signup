@@ -22,14 +22,5 @@ class Main():
             else:
                 continue
 
-    def waitUntilUrl(self, page, targetUrl, timeout=30):
-        startTime = time.time()
-        while time.time() - startTime < timeout:
-            if targetUrl in page.url:
-                return True
-            time.sleep(0.5)
-        return False
-
-
 if __name__ == "__main__":
     print("This is a library file. Please run main.py instead.")

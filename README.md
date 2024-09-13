@@ -18,10 +18,10 @@ Simple as filling date of birthday, username as well as password all automatical
 - Be able to prompt to change to your own password instead of using the default one.
 - The script does all the job itself
 - Automatically checks if the username generated is taken or not. If yes, a new one would be generated.
-- Error handling (prob)
 
 > **Warning**
-> It is important to note that excessive usage of this tool may result in rate limiting by the API or, in severe cases, IP blocking. To avoid these potential consequences, it is recommended to limit the number of usage. (Maybe 5 times every 10 minutes?)
+- It is important to note that excessive usage of this tool may result in rate limiting by the API or, in severe cases, IP blocking. To avoid these potential consequences, it is recommended to limit the number of usage. (Maybe 5 times every 10 minutes?)
+- The script does not solves FunCaptcha from Roblox, I haven't found an efficient way to do so. For now, you have to solve it by yourself.
 ## Installation / Usage
 
 First, clone this repository:

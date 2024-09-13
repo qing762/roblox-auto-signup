@@ -38,10 +38,6 @@ else:
             except ValueError:
                 print("Invalid number given. Please enter a valid number.")
 
-    print(
-        "\nDue to the inner workings of the module, it is needed to browse programmatically.\nNEVER use the gui to navigate (Using your keybord and mouse) as it will causes POSSIBLE DETECTION!\nThe script will do the entire job itself.\n"
-    )
-
     for x in range(int(executionCount)):
         page = ChromiumPage()
         try:
@@ -88,7 +84,7 @@ else:
         except Exception as e:
             print(f"An error occured\n{e}")
         finally:
-            lib.waitUntilUrl(page, "https://www.roblox.com/home")
+            page.wait.url_change("https://www.roblox.com/home", timeout=float('inf'))
             page.set.cookies.clear()
             page.clear_cache()
             page.quit()
