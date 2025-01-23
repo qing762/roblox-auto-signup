@@ -10,55 +10,59 @@ A tool that auto fetch a temporary email address and creates an account at https
 
 ## How it works
 
-Simple as filling date of birthday, username as well as password all automatically.
+The process begins by utilizing the [Mails.org](https://mails.org/) service to obtain a temporary email address. Then it will create an [Roblox](https://roblox.com) account. The email address is then utilized for verification for the [Roblox](https://roblox.com) account]. Subsequently, another request is made to [Mails.org](https://mails.org/) to retrieve the email confirmation link. Upon activation of the account, the user is able to log in to Roblox and enjoy the game with the account generated.
 
 
 ## Features
 
 - Be able to prompt to change to your own password instead of using the default one.
-- The script does all the job itself
+- Password complexity checker for custom password.
 - Automatically checks if the username generated is taken or not. If yes, a new one would be generated.
+- Error handling.
+- The script does all the job itself
+- No webdriver required
+- Fast execution time
 
 > **Warning**
-- It is important to note that excessive usage of this tool may result in rate limiting by the API or, in severe cases, IP blocking. To avoid these potential consequences, it is recommended to limit the number of usage. (Maybe 5 times every 10 minutes?)
-- The script does not solves FunCaptcha from Roblox, I haven't found an efficient way to do so. For now, you have to solve it by yourself.
+> The script does not solves FunCaptcha from Roblox, I haven't found an efficient way to do so. For now, you have to solve it by yourself.
+
 ## Installation / Usage
 
-First, clone this repository:
-```shell
-git clone https://github.com/qing762/roblox-auto-signup/
-```
-Install [Google Chrome](https://google.com/chrome/) (Haven't tested it out with Chromium / ChromeDriver, but assuming it's same as my [ExitLag-auto-signup project](https://github.com/qing762/exitlag-auto-signup))
-```shell
-INSTALL HERE: https://google.com/chrome/
-```
+### [>>> VIDEO GUIDE <<<](https://qing762.is-a.dev/roblox-guide)>>>]
 
-Install the necessary dependencies:
-```shell
-pip install -r requirements.txt
-```
+#### 1. Portable executable method:
+- Just download the executable from the [releases tab](https://github.com/qing762/roblox-auto-signup/releases) and run it to generate accounts.
+- If your antivirus has flagged for potential malware, that should be a false flag so feel free to safely ignore. If you dont trust it enough somehow, feel free to use [Step 2](https://github.com/qing762/roblox-auto-signup#2-python-file-method) instead.
+- The account details should be generated at the `accounts.txt` file under the same directory.
 
-Next, run the Python file:
-```shell
-python main.py
-```
+#### 2. Python file method:
+ - First, clone this repository:
+ ```shell
+ git clone https://github.com/qing762/roblox-auto-signup/
+ ```
+ - Install [Google Chrome](https://google.com/chrome/) (IMPORTANT!)
+ ```shell
+ INSTALL HERE: https://google.com/chrome/
+ ```
+
+ - Install the necessary dependencies:
+ ```shell
+ pip install -r requirements.txt
+ ```
+
+ - Finally, run the Python file:
+ ```shell
+ python main.py
+ ```
 
 And you're all set! Follow the instructions while interacting with the Python file.
+
 
 ## Contributing
 
 Contributions are always welcome!
 
-To contribute, fork this repository and improve it. After that, press the contribute button.
-## FAQ
-#### Why did you create this?
-
-Simple as no idea what to program and this is suggested by one of my friend.
-
-
-#### Any plans on improving the project?
-
-Sadly, no.
+To contribute, fork this repository and do anything you wish. After that, make a pull request.
 
 
 ## Feedback / Issues
@@ -73,3 +77,12 @@ If the company wishes to discontinue or terminate this project, please do not he
 ## License
 
 [MIT LICENSE](https://choosealicense.com/licenses/mit/)
+
+
+---
+
+
+![Alt](https://repobeats.axiom.co/api/embed/aac39ff8dcde3dfb590a680b382ffb8b1a06ed49.svg "Repobeats analytics image")
+
+
+---

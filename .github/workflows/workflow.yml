@@ -1,4 +1,4 @@
-name: Github Actions
+name: Build, Lint & Publish
 
 on:
   push:
@@ -11,40 +11,53 @@ permissions:
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v2
-      with:
-        python-version: "3.10"
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install flake8 pytest
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 pytest
+          if (Test-Path requirements.txt) { pip install -r requirements.txt }
+        shell: pwsh
+  
+      - name: Lint with flake8
+        run: |
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 . --count --max-complexity=40 --max-line-length=300 --statistics
 
+      - name: Build executable
+        run: |
+          echo "__version__ = 'v1.${{ github.run_number }}'" > version.py
+          pyinstaller --onefile --clean --add-data "version.py:." --name "roblox-auto-signup v1.${{ github.run_number }}.exe" main.py
 
-    - name: Lint with flake8
-      run: |
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=300 --extend-ignore=C901 --statistics
+      - name: Upload Executable
+        uses: actions/upload-artifact@v3
+        with:
+          name: Roblox Auto Signup v1.${{ github.run_number }}
+          path: ./dist/roblox-auto-signup v1.${{ github.run_number }}.exe
+  
+      - name: Create a new tag
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "v1.${{ github.run_number }}" -m "Release v1.${{ github.run_number }}"
+          git push origin "v1.${{ github.run_number }}"
 
-    - name: Zip repo files
-      uses: papeloto/action-zip@v1
-      with:
-        files: .
-        dest: release.zip
-
-    - name: Publish code
-      id: create_release
-      uses: softprops/action-gh-release@v1
-      with:
-        files: release.zip
-        name: "Release v1.${{ github.run_number }}"
-        body: "Commit: ${{ github.sha }}\nDownload the `release.zip` file and you are good to go!\nContinue by following the steps given in the README."
-        tag_name: ${{ github.ref_name }}
+      - name: Publish code
+        id: create_release
+        uses: softprops/action-gh-release@v2.0.4
+        with:
+          files: |
+            ./dist/roblox-auto-signup v1.${{ github.run_number }}.exe
+          name: "Release v1.${{ github.run_number }}"
+          body: "Commit: ${{ github.sha }}\nDownload the `roblox-auto-signup.v1.${{ github.run_number }}.exe` file or the `source code` and you are good to go!"
+          tag_name: "v1.${{ github.run_number }}"

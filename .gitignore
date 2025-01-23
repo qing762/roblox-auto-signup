@@ -1,5 +1,13 @@
-.git/
-downloaded_files/
-*.temp
+
 __pycache__/
+.git/
 accounts.txt
+/.vscode
+/.vs
+build/
+dist/
+*.exe
+assignVer.py
+*.spec
+version.py
+/downloaded_files
