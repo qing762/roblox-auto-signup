@@ -28,7 +28,7 @@ The process begins by utilizing the [Mails.org](https://mails.org/) service to o
 
 ## Installation / Usage
 
-### [>>> VIDEO GUIDE <<<](https://qing762.is-a.dev/roblox-guide)>>>]
+### [>>> VIDEO GUIDE <<<](https://qing762.is-a.dev/roblox-guide)
 
 #### 1. Portable executable method:
 - Just download the executable from the [releases tab](https://github.com/qing762/roblox-auto-signup/releases) and run it to generate accounts.
