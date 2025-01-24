@@ -1,8 +1,8 @@
-import re
 import asyncio
 import warnings
 from datetime import datetime
 from DrissionPage import Chromium, ChromiumOptions
+from DrissionPage.common import wait_until
 from tqdm import TqdmExperimentalWarning
 from tqdm.rich import tqdm
 from lib.lib import Main
@@ -61,19 +61,20 @@ async def main():
         bar.update(20)
         chrome = Chromium(addr_or_opts=port)
         page = chrome.get_tab(id_or_num=1)
-        page.listen.start("https://mails.org", method="POST")
-        page.get("https://mails.org")
-
-        for _ in range(10):
-            result = page.listen.wait()
-            if result.url == "https://mails.org/api/email/generate":
-                email = result.response.body["message"]
+        page.get("https://mail.tm/en")
+        page.ele(
+            ".rounded-[calc(var(--ui-radius)*1.5)] font-medium inline-flex items-center "
+            "focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed "
+            "disabled:opacity-75 aria-disabled:opacity-75 transition-colors px-2.5 py-1.5 text-sm "
+            "gap-1.5 text-[var(--ui-primary)] hover:text-[var(--ui-primary)]/75 disabled:text-[var(--ui-primary)] "
+            "aria-disabled:text-[var(--ui-primary)] focus-visible:ring-2 focus-visible:ring-inset "
+            "focus-visible:ring-[var(--ui-primary)] group flex-1 justify-between"
+        ).click()
+        while True:
+            email = page.ele('xpath://*[@id="reka-dropdown-menu-content-v-1-9"]/div[1]/div/div/p[2]').text
+            emailPassword = page.ele('xpath://*[@id="reka-dropdown-menu-content-v-1-9"]/div[1]/div/div/p[3]/span').text
+            if email != "..." and emailPassword != "...":
                 break
-
-        if not email:
-            print("Failed to generate email. Exiting...")
-            continue
-
         bar.set_description(f"Account generation process [{x + 1}/{executionCount}]")
         bar.update(20)
 
@@ -117,7 +118,6 @@ async def main():
             tab.ele("#signup-username").input(username)
             tab.ele("#signup-password").input(passw)
             tab.ele("#signup-button").click()
-            page.listen.start("https://mails.org", method="POST")
         except Exception as e:
             print(f"An error occured\n{e}")
         finally:
@@ -130,30 +130,13 @@ async def main():
 
             if tab.ele(".verification-upsell-text-body", timeout=60):
                 link = None
-                for _ in range(10):
-                    result = page.listen.wait()
-                    content = result.response.body["emails"]
-                    if not content:
-                        continue
-                    for _, y in content.items():
-                        if (
-                            y["subject"]
-                            == f"Roblox Email Verification: {username}"
-                        ):
-                            links = re.findall(
-                                r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
-                                y["body"],
-                            )
-                            for link in links:
-                                if link.startswith(
-                                    "https://www.roblox.com/account/settings/verify-email?ticket="
-                                ):
-                                    link = re.sub(r"</?[^>]+>", "", link)
-                                    break
-                        if link:
-                            break
-                    if link:
-                        break
+                mail = page.ele(".group block transition hover:bg-gray-50 focus:outline-none dark:focus:bg-gray-900/50 dark:hover:bg-gray-900/50")
+                wait_until(
+                    lambda: mail,
+                    timeout=10
+                )
+                page.get(mail.attr("href"))
+                link = page.ele('xpath:/html/body/center/div/table/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[10]/tbody/tr/td/table/tbody/tr/td/a').attr("href")
                 if link:
                     bar.set_description(
                         f"Verifying email address [{x + 1}/{executionCount}]"
@@ -168,7 +151,7 @@ async def main():
                     chrome.clear_cache()
                     chrome.quit()
 
-                    accounts.append({"username": username, "email": email, "password": passw})
+                    accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword})
 
                     bar.set_description(f"Done [{x + 1}/{executionCount}]")
                     bar.update(1)
@@ -183,12 +166,12 @@ async def main():
         for account in accounts:
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             f.write(
-                f"Username: {account['username']}, Email: {account['email']}, Password: {account['password']} (Created at {timestamp})\n"
+                f"Username: {account['username']}, Password: {account['password']}, Email: {account['email']}, Email Password: {account['emailPassword']} (Created at {timestamp})\n"
             )
     print("\033[1m" "Credentials:")
 
     for account in accounts:
-        print(f"Username: {account['username']}, Email: {account['email']}, Password: {account['password']}")
+        print(f"Username: {account['username']}, Password: {account['password']}, Email: {account['email']}, Email Password: {account['emailPassword']}")
     print("\033[0m" "\nCredentials saved to accounts.txt\nHave fun playing Roblox!")
 
 if __name__ == "__main__":

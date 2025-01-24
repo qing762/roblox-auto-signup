@@ -10,7 +10,7 @@ A tool that auto fetch a temporary email address and creates an account at https
 
 ## How it works
 
-The process begins by utilizing the [Mails.org](https://mails.org/) service to obtain a temporary email address. Then it will create an [Roblox](https://roblox.com) account. The email address is then utilized for verification for the [Roblox](https://roblox.com) account]. Subsequently, another request is made to [Mails.org](https://mails.org/) to retrieve the email confirmation link. Upon activation of the account, the user is able to log in to Roblox and enjoy the game with the account generated.
+The process begins by utilizing the [Mail.tm](https://mail.tm/) service to obtain a temporary email address. Then it will create an [Roblox](https://roblox.com) account. The email address is then utilized for verification for the [Roblox](https://roblox.com) account. Subsequently, another request is made to [Mail.tm](https://mail.tm/) to retrieve the email confirmation link. Upon activation of the account, the user is able to log in to Roblox and enjoy the game with the account generated.
 
 
 ## Features
