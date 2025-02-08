@@ -77,49 +77,25 @@ async def main():
                 break
         bar.set_description(f"Account generation process [{x + 1}/{executionCount}]")
         bar.update(20)
-
+        
         try:
             tab = chrome.new_tab("https://www.roblox.com/CreateAccount")
             bdaymonthelement = tab.ele("#MonthDropdown")
-            if datetime.now().month == 1:
-                bdaymonthelement.select.by_value("Jan")
-            elif datetime.now().month == 2:
-                bdaymonthelement.select.by_value("Feb")
-            elif datetime.now().month == 3:
-                bdaymonthelement.select.by_value("Mar")
-            elif datetime.now().month == 4:
-                bdaymonthelement.select.by_value("Apr")
-            elif datetime.now().month == 5:
-                bdaymonthelement.select.by_value("May")
-            elif datetime.now().month == 6:
-                bdaymonthelement.select.by_value("Jun")
-            elif datetime.now().month == 7:
-                bdaymonthelement.select.by_value("Jul")
-            elif datetime.now().month == 8:
-                bdaymonthelement.select.by_value("Aug")
-            elif datetime.now().month == 9:
-                bdaymonthelement.select.by_value("Sep")
-            elif datetime.now().month == 10:
-                bdaymonthelement.select.by_value("Oct")
-            elif datetime.now().month == 11:
-                bdaymonthelement.select.by_value("Nov")
-            elif datetime.now().month == 12:
-                bdaymonthelement.select.by_value("Dec")
+            currentMonth = datetime.now().strftime("%b")
+            bdaymonthelement.select.by_value(currentMonth)
+            bdaydayelement = tab.ele("css:DayDropdown")
+            currentDay = datetime.now().day
+            if currentDay <= 9:
+                bdaydayelement.select.by_value(f"0{currentDay}")
             else:
-                bdaymonthelement.select.by_value("Jan")
-            bdaydayelement = tab.ele("#DayDropdown")
-            if datetime.now().day <= 31:
-                if datetime.now().day <= 9:
-                    bdaydayelement.select.by_value("0" + str(datetime.now().day))
-                bdaydayelement.select.by_value(str(datetime.now().day))
-            else:
-                bdaydayelement.select.by_value("01")
-            tab.ele("#YearDropdown").select.by_value(str(datetime.now().year - 19))
+                bdaydayelement.select.by_value(str(currentDay))
+            currentYear = datetime.now().year - 19
+            tab.ele("#YearDropdown").select.by_value(str(currentYear))
             tab.ele("#signup-username").input(username)
             tab.ele("#signup-password").input(passw)
             tab.ele("#signup-button").click()
         except Exception as e:
-            print(f"An error occured\n{e}")
+            print(f"An error occurred\n{e}")
         finally:
             bar.set_description(f"Signup process [{x + 1}/{executionCount}]")
             bar.update(30)
