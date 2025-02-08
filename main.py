@@ -77,7 +77,7 @@ async def main():
                 break
         bar.set_description(f"Account generation process [{x + 1}/{executionCount}]")
         bar.update(20)
-        
+
         try:
             tab = chrome.new_tab("https://www.roblox.com/CreateAccount")
             bdaymonthelement = tab.ele("#MonthDropdown")
