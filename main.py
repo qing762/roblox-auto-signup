@@ -62,14 +62,7 @@ async def main():
         chrome = Chromium(addr_or_opts=port)
         page = chrome.get_tab(id_or_num=1)
         page.get("https://mail.tm/en")
-        page.ele(
-            ".rounded-[calc(var(--ui-radius)*1.5)] font-medium inline-flex items-center "
-            "focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed "
-            "disabled:opacity-75 aria-disabled:opacity-75 transition-colors px-2.5 py-1.5 text-sm "
-            "gap-1.5 text-[var(--ui-primary)] hover:text-[var(--ui-primary)]/75 disabled:text-[var(--ui-primary)] "
-            "aria-disabled:text-[var(--ui-primary)] focus-visible:ring-2 focus-visible:ring-inset "
-            "focus-visible:ring-[var(--ui-primary)] group flex-1 justify-between"
-        ).click()
+        page.ele('xpath://*[@id="__nuxt"]/div[1]/div[2]/div/div/div[2]/button[3]').click()
         while True:
             email = page.ele('xpath://*[@id="reka-dropdown-menu-content-v-1-9"]/div[1]/div/div/p[2]').text
             emailPassword = page.ele('xpath://*[@id="reka-dropdown-menu-content-v-1-9"]/div[1]/div/div/p[3]/span').text
@@ -95,48 +88,53 @@ async def main():
             tab.ele("#signup-password").input(passw)
             tab.ele("#signup-button").click()
         except Exception as e:
-            print(f"An error occurred\n{e}")
+            print(f"\nAn error occurred\n{e}\n")
         finally:
             bar.set_description(f"Signup process [{x + 1}/{executionCount}]")
             bar.update(30)
             tab.wait.url_change("https://www.roblox.com/home", timeout=float('inf'))
-            tab.ele(".btn-primary-md btn-primary-md btn-min-width").click()
-            tab.ele(". form-control input-field verification-upsell-modal-input").input(email)
-            tab.ele(".modal-button verification-upsell-btn btn-cta-md btn-min-width").click()
+            try:
+                tab.ele(".btn-primary-md btn-primary-md btn-min-width").click()
+                tab.ele(". form-control input-field verification-upsell-modal-input").input(email)
+                tab.ele(".modal-button verification-upsell-btn btn-cta-md btn-min-width").click()
 
-            if tab.ele(".verification-upsell-text-body", timeout=60):
-                link = None
-                mail = page.ele(".group block transition hover:bg-gray-50 focus:outline-none dark:focus:bg-gray-900/50 dark:hover:bg-gray-900/50")
-                wait_until(
-                    lambda: mail,
-                    timeout=10
-                )
-                page.get(mail.attr("href"))
-                link = page.ele('xpath:/html/body/center/div/table/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[10]/tbody/tr/td/table/tbody/tr/td/a').attr("href")
-                if link:
-                    bar.set_description(
-                        f"Verifying email address [{x + 1}/{executionCount}]"
+                if tab.ele(".verification-upsell-text-body", timeout=60):
+                    link = None
+                    mail = page.ele(".group block transition hover:bg-gray-50 focus:outline-none dark:focus:bg-gray-900/50 dark:hover:bg-gray-900/50")
+                    wait_until(
+                        lambda: mail,
+                        timeout=10
                     )
-                    bar.update(20)
-                    tab.get(link)
-                    bar.set_description("Clearing cache and data")
-                    bar.update(9)
-                    tab.set.cookies.clear()
-                    tab.clear_cache()
-                    chrome.set.cookies.clear()
-                    chrome.clear_cache()
-                    chrome.quit()
-
-                    accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword})
-
-                    bar.set_description(f"Done [{x + 1}/{executionCount}]")
-                    bar.update(1)
-                    bar.close()
-                    print()
-                else:
-                    print(
-                        "Failed to find verification email. You may need to verify it manually. Skipping and continuing...\n"
-                    )
+                    page.get(mail.attr("href"))
+                    link = page.ele('xpath:/html/body/center/div/table/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[10]/tbody/tr/td/table/tbody/tr/td/a').attr("href")
+                    if link:
+                        bar.set_description(
+                            f"Verifying email address [{x + 1}/{executionCount}]"
+                        )
+                        bar.update(20)
+                        tab.get(link)
+                        bar.set_description("Clearing cache and data")
+                        bar.update(9)
+                        tab.set.cookies.clear()
+                        tab.clear_cache()
+                        chrome.set.cookies.clear()
+                        chrome.clear_cache()
+                        chrome.quit()
+                        accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword})
+                        bar.set_description(f"Done [{x + 1}/{executionCount}]")
+                        bar.update(1)
+                        bar.close()
+                        print()
+                    else:
+                        bar.close()
+                        accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword})
+                        print(
+                            "\nFailed to find verification email. You may need to verify it manually. Skipping and continuing...\n"
+                        )
+            except Exception as e:
+                bar.close()
+                accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword})
+                print(f"\nFailed to find email verification element. You may need to verify the account manually. Skipping and continuing...\n{e}\n")
 
     with open("accounts.txt", "a") as f:
         for account in accounts:

@@ -5,10 +5,6 @@ import sys
 
 
 class Main():
-    def get_random_string(self, length):
-        letters = string.ascii_lowercase
-        return "".join(random.choice(letters) for i in range(length))
-
     def usernamecreator(self):
         while True:
             characters = string.ascii_letters + string.digits + '._-'
@@ -36,9 +32,9 @@ class Main():
                     currentVer = file.read().strip()
 
             if currentVer < latestVer:
-                print(f"Update available: {latestVer} (Current version: {currentVer})\nYou can download the latest version from: https://github.com/qing762/roblox-auto-signup/releases/latest\n")
+                print(f"Update available: {latestVer} (Current version: {currentVer})\nYou can download the latest version from: https://github.com/qing762/roblox-auto-signup/releases/latest")
             else:
-                print(f"You are running the latest version: {currentVer}\n")
+                print(f"You are running the latest version: {currentVer}")
                 pass
         except Exception as e:
             print(f"An error occurred: {e}")
