@@ -2,6 +2,7 @@
 __pycache__/
 .git/
 accounts.txt
+cookies.json
 /.vscode
 /.vs
 build/

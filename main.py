@@ -1,5 +1,6 @@
 import asyncio
 import warnings
+import json
 from datetime import datetime
 from DrissionPage import Chromium, ChromiumOptions
 from DrissionPage.common import wait_until
@@ -18,8 +19,6 @@ async def main():
     print("Checking for updates...")
     await lib.checkUpdate()
 
-    username = lib.usernamecreator()
-
     while True:
         passw = (
             input(
@@ -31,7 +30,7 @@ async def main():
             or "Qing762.chy"
         )
         if passw != "Qing762.chy":
-            result = await lib.checkPassword(username, passw)
+            result = await lib.checkPassword(lib.usernamecreator(), passw)
             print(result)
             if "Password is valid" in result:
                 break
@@ -39,6 +38,7 @@ async def main():
             break
 
     accounts = []
+    cookies = []
 
     while True:
         executionCount = input(
@@ -56,6 +56,7 @@ async def main():
     print()
 
     for x in range(int(executionCount)):
+        username = lib.usernamecreator()
         bar = tqdm(total=100)
         bar.set_description(f"Initial setup completed [{x + 1}/{executionCount}]")
         bar.update(20)
@@ -115,6 +116,12 @@ async def main():
                         tab.get(link)
                         bar.set_description("Clearing cache and data")
                         bar.update(9)
+                        for i in tab.cookies():
+                            cookie = {
+                                "name": i["name"],
+                                "value": i["value"],
+                            }
+                            cookies.append(cookie)
                         tab.set.cookies.clear()
                         tab.clear_cache()
                         chrome.set.cookies.clear()
@@ -126,14 +133,37 @@ async def main():
                         bar.close()
                         print()
                     else:
-                        bar.close()
+                        for i in tab.cookies():
+                            cookie = {
+                                "name": i["name"],
+                                "value": i["value"],
+                            }
+                            cookies.append(cookie)
+                        tab.set.cookies.clear()
+                        tab.clear_cache()
+                        chrome.set.cookies.clear()
+                        chrome.clear_cache()
+                        chrome.quit()
                         accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword})
+                        bar.close()
                         print(
                             "\nFailed to find verification email. You may need to verify it manually. Skipping and continuing...\n"
                         )
             except Exception as e:
-                bar.close()
+                for i in tab.cookies():
+                    cookie = {
+                        "name": i["name"],
+                        "value": i["value"],
+                    }
+                    cookies.append(cookie)
+                print(cookies)
+                tab.set.cookies.clear()
+                tab.clear_cache()
+                chrome.set.cookies.clear()
+                chrome.clear_cache()
+                chrome.quit()
                 accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword})
+                bar.close()
                 print(f"\nFailed to find email verification element. You may need to verify the account manually. Skipping and continuing...\n{e}\n")
 
     with open("accounts.txt", "a") as f:
@@ -144,9 +174,38 @@ async def main():
             )
     print("\033[1m" "Credentials:")
 
+    try:
+        with open("cookies.json", "r") as file:
+            existingData = json.load(file)
+    except FileNotFoundError:
+        existingData = []
+
+    accountsData = []
+
+    for account in accounts:
+        accountData = {
+            "username": account["username"],
+            "password": account["password"],
+            "email": account["email"],
+            "emailPassword": account["emailPassword"],
+            "cookies": []
+        }
+        for cookie in cookies:
+            accountData["cookies"].append({
+                "name": cookie["name"],
+                "value": cookie["value"]
+            })
+        accountsData.append(accountData)
+
+    existingData.extend(accountsData)
+
+    with open("cookies.json", "w") as json_file:
+        json.dump(existingData, json_file, indent=4)
+
     for account in accounts:
         print(f"Username: {account['username']}, Password: {account['password']}, Email: {account['email']}, Email Password: {account['emailPassword']}")
-    print("\033[0m" "\nCredentials saved to accounts.txt\nHave fun playing Roblox!")
+    print("\033[0m" "\nCredentials saved to accounts.txt\nCookies are saved to cookies.json file\n\nHave fun playing Roblox!")
+
 
 if __name__ == "__main__":
     asyncio.run(main())
