@@ -8,9 +8,7 @@ from tqdm import TqdmExperimentalWarning
 from tqdm.rich import tqdm
 from lib.lib import Main
 
-
 warnings.filterwarnings("ignore", category=TqdmExperimentalWarning)
-
 
 async def main():
     lib = Main()
