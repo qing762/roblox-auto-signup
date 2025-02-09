@@ -10,6 +10,7 @@ from lib.lib import Main
 
 warnings.filterwarnings("ignore", category=TqdmExperimentalWarning)
 
+
 async def main():
     lib = Main()
     port = ChromiumOptions().auto_port()
