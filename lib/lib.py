@@ -5,13 +5,20 @@ import sys
 
 
 class Main():
-    def usernamecreator(self):
+    def usernamecreator(self, nameFormat=None):
+        counter = 0
         while True:
-            characters = string.ascii_letters + string.digits + '._-'
-            username = ''.join(random.choice(characters) for _ in range(random.randint(5, 32)))
+            if nameFormat:
+                username = f"{nameFormat}_{counter}"
+                counter += 1
+            else:
+                characters = string.ascii_letters + string.digits + '._-'
+                username = ''.join(random.choice(characters) for _ in range(random.randint(5, 32)))
+            
             r = requests.get(
                 f"https://auth.roblox.com/v2/usernames/validate?request.username={username}&request.birthday=04%2F15%2F02&request.context=Signup"
             ).json()
+            
             if r["code"] == 0:
                 return username
             else:

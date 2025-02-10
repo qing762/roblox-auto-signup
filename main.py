@@ -8,6 +8,7 @@ from tqdm import TqdmExperimentalWarning
 from tqdm.rich import tqdm
 from lib.lib import Main
 
+
 warnings.filterwarnings("ignore", category=TqdmExperimentalWarning)
 
 
@@ -52,10 +53,22 @@ async def main():
                 break
             else:
                 print("Please enter a valid number.")
+
+    nameFormat = input(
+        "\033[1m"
+        "\n(RECOMMENDED) Press enter in order to use randomized name format"
+        "\033[0m"
+        "\nIf you prefer to go by your own name format, please enter it here.\nIt will go by this example: (If name format is 'qing', then the account generated will be named 'qing_0', 'qing_1' and so on)\nName format: "
+    )
     print()
+    if nameFormat == "":
+        nameFormat = None
 
     for x in range(int(executionCount)):
-        username = lib.usernamecreator()
+        if nameFormat:
+            username = lib.usernamecreator(nameFormat)
+        else:
+            username = lib.usernamecreator()
         bar = tqdm(total=100)
         bar.set_description(f"Initial setup completed [{x + 1}/{executionCount}]")
         bar.update(20)
@@ -155,7 +168,6 @@ async def main():
                         "value": i["value"],
                     }
                     cookies.append(cookie)
-                print(cookies)
                 tab.set.cookies.clear()
                 tab.clear_cache()
                 chrome.set.cookies.clear()
