@@ -206,7 +206,7 @@ async def main():
                 bar.close()
                 print(f"\nFailed to find email verification element. You may need to verify the account manually. Skipping and continuing...\n{e}\n")
 
-            if customization == True:
+            if customization is True:
                 tab.listen.start('https://avatar.roblox.com/v1/recent-items/all/list')
                 tab.get("https://www.roblox.com/my/avatar")
                 result = tab.listen.wait()
