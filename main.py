@@ -1,6 +1,8 @@
 import asyncio
 import warnings
 import json
+import random
+import os
 from datetime import datetime
 from DrissionPage import Chromium, ChromiumOptions
 from DrissionPage.common import wait_until
@@ -15,11 +17,30 @@ warnings.filterwarnings("ignore", category=TqdmExperimentalWarning)
 async def main():
     lib = Main()
     co = ChromiumOptions()
-    co.incognito()
-    co.auto_port()
+    co.incognito().auto_port().mute(True)
 
     print("Checking for updates...")
     await lib.checkUpdate()
+
+    while True:
+        browserPath = input(
+            "\033[1m"
+            "\n(RECOMMENDED) Press enter in order to use the default browser path (If you have Chrome installed)"
+            "\033[0m"
+            "\nIf you prefer to use other Chromium browser other than Chrome, please enter its executable path here. (e.g: C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe)"
+            "\nHere are some supported browsers that are tested and able to use:"
+            "\n- Chrome Browser"
+            "\n- Brave Browser"
+            "\nBrowser executable path: "
+        ).replace('"', "").replace("'", "")
+        if browserPath != "":
+            if os.path.exists(browserPath):
+                co.set_browser_path(browserPath)
+                break
+            else:
+                print("Please enter a valid path.")
+        else:
+            break
 
     while True:
         passw = (
@@ -39,6 +60,22 @@ async def main():
         else:
             break
 
+    nameFormat = input(
+        "\033[1m"
+        "\n(RECOMMENDED) Press enter in order to use randomized name format"
+        "\033[0m"
+        "\nIf you prefer to go by your own name format, please enter it here.\nIt will go by this example: (If name format is 'qing', then the account generated will be named 'qing_0', 'qing_1' and so on)\nName format: "
+    )
+
+    while True:
+        customization = input(
+            "\nWould you like to customize the account after the generation process with a randomizer? [y/n] (Default: No): "
+        )
+        if customization.lower() in ["y", "n", ""]:
+            break
+        else:
+            print("Please enter a valid option.")
+
     accounts = []
     cookies = []
 
@@ -56,16 +93,15 @@ async def main():
             else:
                 print("Please enter a valid number.")
 
-    nameFormat = input(
-        "\033[1m"
-        "\n(RECOMMENDED) Press enter in order to use randomized name format"
-        "\033[0m"
-        "\nIf you prefer to go by your own name format, please enter it here.\nIt will go by this example: (If name format is 'qing', then the account generated will be named 'qing_0', 'qing_1' and so on)\nName format: "
-    )
     print()
 
     if nameFormat == "":
         nameFormat = None
+
+    if customization.lower() == "y":
+        customization = True
+    else:
+        customization = False
 
     for x in range(int(executionCount)):
         if nameFormat:
@@ -131,24 +167,12 @@ async def main():
                         tab.get(link)
                         bar.set_description("Clearing cache and data")
                         bar.update(9)
-
                         for i in tab.cookies():
                             cookie = {
                                 "name": i["name"],
                                 "value": i["value"],
                             }
                             cookies.append(cookie)
-
-                        tab.set.cookies.clear()
-                        tab.clear_cache()
-                        chrome.set.cookies.clear()
-                        chrome.clear_cache()
-                        chrome.quit()
-                        accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword})
-                        bar.set_description(f"Done [{x + 1}/{executionCount}]")
-                        bar.update(1)
-                        bar.close()
-                        print()
                     else:
                         for i in tab.cookies():
                             cookie = {
@@ -181,6 +205,45 @@ async def main():
                 accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword})
                 bar.close()
                 print(f"\nFailed to find email verification element. You may need to verify the account manually. Skipping and continuing...\n{e}\n")
+
+            if customization == True:
+                tab.listen.start('https://avatar.roblox.com/v1/recent-items/all/list')
+                tab.get("https://www.roblox.com/my/avatar")
+                result = tab.listen.wait()
+                content = result.response.body
+                assetDict = {}
+                for item in content['data']:
+                    if 'assetType' in item:
+                        assetType = item["assetType"]["name"]
+                        if assetType not in assetDict:
+                            assetDict[assetType] = []
+                        assetDict[assetType].append(item)
+                tab.listen.stop()
+
+                selectedAssets = {}
+                for assetType, assets in assetDict.items():
+                    selectedAssets[assetType] = random.choice(assets)
+
+                for assetType, asset in selectedAssets.items():
+                    for z in tab.ele(".hlist item-cards-stackable").eles("tag:li"):
+                        if z.ele("tag:a").attr("data-item-name") == asset["name"]:
+                            z.ele("tag:a").click()
+                            break
+
+                bodyType = random.choice([i for i in range(0, 101, 5)])
+                tab.run_js_loaded(f'document.getElementById("body type-scale").value = {bodyType};')
+                tab.run_js_loaded('document.getElementById("body type-scale").dispatchEvent(new Event("input"));')
+
+            tab.set.cookies.clear()
+            tab.clear_cache()
+            chrome.set.cookies.clear()
+            chrome.clear_cache()
+            chrome.quit()
+            accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword})
+            bar.set_description(f"Finishing [{x + 1}/{executionCount}]")
+            bar.update(1)
+            bar.close()
+            print()
 
     with open("accounts.txt", "a") as f:
         for account in accounts:

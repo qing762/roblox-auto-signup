@@ -40,10 +40,6 @@ The process begins by utilizing the [Mail.tm](https://mail.tm/) service to obtai
  ```shell
  git clone https://github.com/qing762/roblox-auto-signup/
  ```
- - Install [Google Chrome](https://google.com/chrome/) (IMPORTANT!)
- ```shell
- INSTALL HERE: https://google.com/chrome/
- ```
 
  - Install the necessary dependencies:
  ```shell
