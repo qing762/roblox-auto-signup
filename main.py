@@ -14,7 +14,9 @@ warnings.filterwarnings("ignore", category=TqdmExperimentalWarning)
 
 async def main():
     lib = Main()
-    port = ChromiumOptions().auto_port()
+    co = ChromiumOptions()
+    co.incognito()
+    co.auto_port()
 
     print("Checking for updates...")
     await lib.checkUpdate()
@@ -61,6 +63,7 @@ async def main():
         "\nIf you prefer to go by your own name format, please enter it here.\nIt will go by this example: (If name format is 'qing', then the account generated will be named 'qing_0', 'qing_1' and so on)\nName format: "
     )
     print()
+
     if nameFormat == "":
         nameFormat = None
 
@@ -72,7 +75,7 @@ async def main():
         bar = tqdm(total=100)
         bar.set_description(f"Initial setup completed [{x + 1}/{executionCount}]")
         bar.update(20)
-        chrome = Chromium(addr_or_opts=port)
+        chrome = Chromium(addr_or_opts=co)
         page = chrome.get_tab(id_or_num=1)
         page.get("https://mail.tm/en")
         page.ele('xpath://*[@id="__nuxt"]/div[1]/div[2]/div/div/div[2]/button[3]').click()
@@ -128,12 +131,14 @@ async def main():
                         tab.get(link)
                         bar.set_description("Clearing cache and data")
                         bar.update(9)
+
                         for i in tab.cookies():
                             cookie = {
                                 "name": i["name"],
                                 "value": i["value"],
                             }
                             cookies.append(cookie)
+
                         tab.set.cookies.clear()
                         tab.clear_cache()
                         chrome.set.cookies.clear()
