@@ -62,9 +62,9 @@ async def main():
 
     nameFormat = input(
         "\033[1m"
-        "\n(RECOMMENDED) Press enter in order to use randomized name format"
+        "\n(RECOMMENDED) Press enter in order to use randomized name prefix"
         "\033[0m"
-        "\nIf you prefer to go by your own name format, please enter it here.\nIt will go by this example: (If name format is 'qing', then the account generated will be named 'qing_0', 'qing_1' and so on)\nName format: "
+        "\nIf you prefer to go by your own name prefix, please enter it here.\nIt will go by this example: (If name prefix is 'qing', then the account generated will be named 'qing_0', 'qing_1' and so on)\nname prefix: "
     )
 
     while True:

@@ -15,9 +15,12 @@ The process begins by utilizing the [Mail.tm](https://mail.tm/) service to obtai
 
 ## Features
 
+- Able to use any Chromium-based browser.
 - Be able to prompt to change to your own password instead of using the default one.
 - Password complexity checker for custom password.
 - Automatically checks if the username generated is taken or not. If yes, a new one would be generated.
+- Customizable username prefix.
+- Able to randomly customize the account avatar (Clothes, Body size, etc)
 - Error handling.
 - The script does all the job itself
 - No webdriver required
