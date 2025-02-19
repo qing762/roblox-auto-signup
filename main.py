@@ -64,12 +64,12 @@ async def main():
         "\033[1m"
         "\n(RECOMMENDED) Press enter in order to use randomized name prefix"
         "\033[0m"
-        "\nIf you prefer to go by your own name prefix, please enter it here.\nIt will go by this example: (If name prefix is 'qing', then the account generated will be named 'qing_0', 'qing_1' and so on)\nname prefix: "
+        "\nIf you prefer to go by your own name prefix, please enter it here.\nIt will go by this example: (If name prefix is 'qing', then the account generated will be named 'qing_0', 'qing_1' and so on)\nName prefix: "
     )
 
     while True:
         customization = input(
-            "\nWould you like to customize the account after the generation process with a randomizer? [y/n] (Default: No): "
+            "\nWould you like to customize the account after the generation process with a randomizer? [y/n] (Default: Yes): "
         )
         if customization.lower() in ["y", "n", ""]:
             break
@@ -94,9 +94,6 @@ async def main():
                 print("Please enter a valid number.")
 
     print()
-
-    if nameFormat == "":
-        nameFormat = None
 
     if customization.lower() == "y":
         customization = True
