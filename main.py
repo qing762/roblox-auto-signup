@@ -170,6 +170,15 @@ async def main():
                                 "value": i["value"],
                             }
                             cookies.append(cookie)
+                        if customization is True:
+                            await lib.customization(tab)
+                        tab.set.cookies.clear()
+                        tab.clear_cache()
+                        chrome.set.cookies.clear()
+                        chrome.clear_cache()
+                        chrome.quit()
+                        accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword})
+                        bar.close()
                     else:
                         for i in tab.cookies():
                             cookie = {
@@ -177,6 +186,8 @@ async def main():
                                 "value": i["value"],
                             }
                             cookies.append(cookie)
+                        if customization is True:
+                            await lib.customization(tab)
                         tab.set.cookies.clear()
                         tab.clear_cache()
                         chrome.set.cookies.clear()
@@ -194,6 +205,8 @@ async def main():
                         "value": i["value"],
                     }
                     cookies.append(cookie)
+                if customization is True:
+                    await lib.customization(tab)
                 tab.set.cookies.clear()
                 tab.clear_cache()
                 chrome.set.cookies.clear()
@@ -202,45 +215,6 @@ async def main():
                 accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword})
                 bar.close()
                 print(f"\nFailed to find email verification element. You may need to verify the account manually. Skipping and continuing...\n{e}\n")
-
-            if customization is True:
-                tab.listen.start('https://avatar.roblox.com/v1/recent-items/all/list')
-                tab.get("https://www.roblox.com/my/avatar")
-                result = tab.listen.wait()
-                content = result.response.body
-                assetDict = {}
-                for item in content['data']:
-                    if 'assetType' in item:
-                        assetType = item["assetType"]["name"]
-                        if assetType not in assetDict:
-                            assetDict[assetType] = []
-                        assetDict[assetType].append(item)
-                tab.listen.stop()
-
-                selectedAssets = {}
-                for assetType, assets in assetDict.items():
-                    selectedAssets[assetType] = random.choice(assets)
-
-                for assetType, asset in selectedAssets.items():
-                    for z in tab.ele(".hlist item-cards-stackable").eles("tag:li"):
-                        if z.ele("tag:a").attr("data-item-name") == asset["name"]:
-                            z.ele("tag:a").click()
-                            break
-
-                bodyType = random.choice([i for i in range(0, 101, 5)])
-                tab.run_js_loaded(f'document.getElementById("body type-scale").value = {bodyType};')
-                tab.run_js_loaded('document.getElementById("body type-scale").dispatchEvent(new Event("input"));')
-
-            tab.set.cookies.clear()
-            tab.clear_cache()
-            chrome.set.cookies.clear()
-            chrome.clear_cache()
-            chrome.quit()
-            accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword})
-            bar.set_description(f"Finishing [{x + 1}/{executionCount}]")
-            bar.update(1)
-            bar.close()
-            print()
 
     with open("accounts.txt", "a") as f:
         for account in accounts:

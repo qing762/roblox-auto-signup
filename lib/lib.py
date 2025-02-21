@@ -69,6 +69,33 @@ class Main():
         else:
             return f"\nPassword does not meet the requirements: {resp['message']}"
 
+    async def customization(self, tab):
+        tab.listen.start('https://avatar.roblox.com/v1/recent-items/all/list')
+        tab.get("https://www.roblox.com/my/avatar")
+        result = tab.listen.wait()
+        content = result.response.body
+        assetDict = {}
+        for item in content['data']:
+            if 'assetType' in item:
+                assetType = item["assetType"]["name"]
+                if assetType not in assetDict:
+                    assetDict[assetType] = []
+                assetDict[assetType].append(item)
+        tab.listen.stop()
+
+        selectedAssets = {}
+        for assetType, assets in assetDict.items():
+            selectedAssets[assetType] = random.choice(assets)
+
+        for assetType, asset in selectedAssets.items():
+            for z in tab.ele(".hlist item-cards-stackable").eles("tag:li"):
+                if z.ele("tag:a").attr("data-item-name") == asset["name"]:
+                    z.ele("tag:a").click()
+                    break
+
+        bodyType = random.choice([i for i in range(0, 101, 5)])
+        tab.run_js_loaded(f'document.getElementById("body type-scale").value = {bodyType};')
+        tab.run_js_loaded('document.getElementById("body type-scale").dispatchEvent(new Event("input"));')
 
 if __name__ == "__main__":
     print("This is a library file. Please run main.py instead.")
