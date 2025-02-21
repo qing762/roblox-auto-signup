@@ -1,7 +1,6 @@
 import asyncio
 import warnings
 import json
-import random
 import os
 from datetime import datetime
 from DrissionPage import Chromium, ChromiumOptions

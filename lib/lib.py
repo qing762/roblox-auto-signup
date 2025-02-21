@@ -97,5 +97,6 @@ class Main():
         tab.run_js_loaded(f'document.getElementById("body type-scale").value = {bodyType};')
         tab.run_js_loaded('document.getElementById("body type-scale").dispatchEvent(new Event("input"));')
 
+
 if __name__ == "__main__":
     print("This is a library file. Please run main.py instead.")
