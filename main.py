@@ -109,6 +109,7 @@ async def main():
         bar.update(20)
         chrome = Chromium(addr_or_opts=co)
         page = chrome.get_tab(id_or_num=1)
+        page.set.window.max()
         page.get("https://mail.tm/en")
         page.ele('xpath://*[@id="__nuxt"]/div[1]/div[2]/div/div/div[2]/button[3]').click()
         while True:
@@ -148,10 +149,12 @@ async def main():
 
                 if tab.ele(".verification-upsell-text-body", timeout=60):
                     link = None
-                    mail = page.ele(".group block transition hover:bg-gray-50 focus:outline-none dark:focus:bg-gray-900/50 dark:hover:bg-gray-900/50")
+                    page.get("https://mail.tm/en")
+                    page.ele('xpath://*[@id="__nuxt"]/div[1]/div[1]/div/div[2]/nav/a[2]').click()
+                    mail = page.ele('xpath://*[@id="__nuxt"]/div[1]/div[2]/main/div[2]/div[2]/ul/li/a')
                     wait_until(
                         lambda: mail,
-                        timeout=10
+                        timeout=100
                     )
                     page.get(mail.attr("href"))
                     link = page.ele('xpath:/html/body/center/div/table/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[10]/tbody/tr/td/table/tbody/tr/td/a').attr("href")
@@ -177,6 +180,7 @@ async def main():
                         chrome.clear_cache()
                         chrome.quit()
                         accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword})
+                        bar.update(1)
                         bar.close()
                     else:
                         for i in tab.cookies():
