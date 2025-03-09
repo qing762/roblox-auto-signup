@@ -75,6 +75,10 @@ async def main():
         else:
             print("Please enter a valid option.")
 
+    proxyUsage = input(
+        "\nWould you like to use a proxy?\nPlease enter the proxy IP and port in the format of IP:PORT (Example: http://localhost:1080). Press enter to skip.\nProxy: "
+    )
+
     accounts = []
     cookies = []
 
@@ -94,10 +98,16 @@ async def main():
 
     print()
 
-    if customization.lower() == "y":
+    if customization.lower() == "y" or customization == "":
         customization = True
     else:
         customization = False
+    
+    if proxyUsage != "":
+        if lib.testProxy(proxyUsage)[0] is True:
+            co.set_proxy(proxyUsage)
+        else:
+            print(lib.testProxy(proxyUsage)[1])
 
     for x in range(int(executionCount)):
         if nameFormat:
