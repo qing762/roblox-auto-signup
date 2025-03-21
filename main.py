@@ -102,7 +102,7 @@ async def main():
         customization = True
     else:
         customization = False
-    
+
     if proxyUsage != "":
         if lib.testProxy(proxyUsage)[0] is True:
             co.set_proxy(proxyUsage)
