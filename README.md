@@ -81,7 +81,7 @@ If the company wishes to discontinue or terminate this project, please do not he
 ---
 
 
-![Alt](https://repobeats.axiom.co/api/embed/aac39ff8dcde3dfb590a680b382ffb8b1a06ed49.svg "Repobeats analytics image")
+[![Star History Chart](https://api.star-history.com/svg?repos=qing762/roblox-auto-signup&type=Date&theme=dark)](https://www.star-history.com/#qing762/roblox-auto-signup&Date)
 
 
 ---
