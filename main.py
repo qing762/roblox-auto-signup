@@ -59,6 +59,15 @@ async def main():
         else:
             break
 
+    while True:
+        verification = input(
+            "\nWould you like to enable email verification? If no you will risk to lose the account. (Hotfix for people who does not have email verification element) [y/n] (Default: Yes): "
+        )
+        if verification.lower() in ["y", "n", ""]:
+            break
+        else:
+            print("Please enter a valid option.")
+
     nameFormat = input(
         "\033[1m"
         "\n(RECOMMENDED) Press enter in order to use randomized name prefix"
@@ -103,6 +112,11 @@ async def main():
     else:
         customization = False
 
+    if verification.lower() == "y" or verification == "":
+        verification = True
+    else:
+        verification = False
+
     if proxyUsage != "":
         if lib.testProxy(proxyUsage)[0] is True:
             co.set_proxy(proxyUsage)
@@ -120,15 +134,16 @@ async def main():
         chrome = Chromium(addr_or_opts=co)
         page = chrome.get_tab(id_or_num=1)
         page.set.window.max()
-        page.get("https://mail.tm/en")
-        page.ele('xpath://*[@id="__nuxt"]/div[1]/div[2]/div/div/div[2]/button[3]').click()
-        while True:
-            email = page.ele('xpath://*[@id="reka-dropdown-menu-content-v-1-9"]/div[1]/div/div/p[2]').text
-            emailPassword = page.ele('xpath://*[@id="reka-dropdown-menu-content-v-1-9"]/div[1]/div/div/p[3]/span').text
-            if email != "..." and emailPassword != "...":
-                break
-        bar.set_description(f"Account generation process [{x + 1}/{executionCount}]")
-        bar.update(20)
+        if verification is True:
+            page.get("https://mail.tm/en")
+            page.ele('xpath://*[@id="__nuxt"]/div[1]/div[2]/div/div/div[2]/button[3]').click()
+            while True:
+                email = page.ele('xpath://*[@id="reka-dropdown-menu-content-v-1-9"]/div[1]/div/div/p[2]').text
+                emailPassword = page.ele('xpath://*[@id="reka-dropdown-menu-content-v-1-9"]/div[1]/div/div/p[3]/span').text
+                if email != "..." and emailPassword != "...":
+                    break
+            bar.set_description(f"Account generation process [{x + 1}/{executionCount}]")
+            bar.update(20)
 
         try:
             tab = chrome.new_tab("https://www.roblox.com/CreateAccount")
@@ -150,49 +165,51 @@ async def main():
             print(f"\nAn error occurred\n{e}\n")
         finally:
             bar.set_description(f"Signup process [{x + 1}/{executionCount}]")
-            bar.update(30)
+            bar.update(50)
             tab.wait.url_change("https://www.roblox.com/home", timeout=float('inf'))
-            try:
-                tab.ele(".btn-primary-md btn-primary-md btn-min-width").click()
-                tab.ele(". form-control input-field verification-upsell-modal-input").input(email)
-                tab.ele(".modal-button verification-upsell-btn btn-cta-md btn-min-width").click()
+            if verification is True:
+                try:
+                    tab.ele(".btn-primary-md btn-primary-md btn-min-width").click()
+                    tab.ele(". form-control input-field verification-upsell-modal-input").input(email)
+                    tab.ele(".modal-button verification-upsell-btn btn-cta-md btn-min-width").click()
 
-                if tab.ele(".verification-upsell-text-body", timeout=60):
-                    link = None
-                    page.get("https://mail.tm/en")
-                    page.ele('xpath://*[@id="__nuxt"]/div[1]/div[1]/div/div[2]/nav/a[2]').click()
-                    mail = page.ele('xpath://*[@id="__nuxt"]/div[1]/div[2]/main/div[2]/div[2]/ul/li/a')
-                    wait_until(
-                        lambda: mail,
-                        timeout=100
-                    )
-                    page.get(mail.attr("href"))
-                    link = page.ele('xpath:/html/body/center/div/table/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[10]/tbody/tr/td/table/tbody/tr/td/a').attr("href")
-                    if link:
-                        bar.set_description(
-                            f"Verifying email address [{x + 1}/{executionCount}]"
+                    if tab.ele(".verification-upsell-text-body", timeout=60):
+                        link = None
+                        page.get("https://mail.tm/en")
+                        page.ele('xpath://*[@id="__nuxt"]/div[1]/div[1]/div/div[2]/nav/a[2]').click()
+                        mail = page.ele('xpath://*[@id="__nuxt"]/div[1]/div[2]/main/div[2]/div[2]/ul/li/a')
+                        wait_until(
+                            lambda: mail,
+                            timeout=100
                         )
-                        bar.update(20)
-                        tab.get(link)
-                        bar.set_description("Clearing cache and data")
-                        bar.update(9)
-                        for i in tab.cookies():
-                            cookie = {
-                                "name": i["name"],
-                                "value": i["value"],
-                            }
-                            cookies.append(cookie)
-                        if customization is True:
-                            await lib.customization(tab)
-                        tab.set.cookies.clear()
-                        tab.clear_cache()
-                        chrome.set.cookies.clear()
-                        chrome.clear_cache()
-                        chrome.quit()
-                        accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword})
-                        bar.update(1)
-                        bar.close()
+                        page.get(mail.attr("href"))
+                        link = page.ele('xpath:/html/body/center/div/table/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[10]/tbody/tr/td/table/tbody/tr/td/a').attr("href")
+                        if link:
+                            bar.set_description(
+                                f"Verifying email address [{x + 1}/{executionCount}]"
+                            )
+                            bar.update(20)
+                            tab.get(link)
+                            bar.set_description("Clearing cache and data")
+                            bar.update(9)
+                            for i in tab.cookies():
+                                cookie = {
+                                    "name": i["name"],
+                                    "value": i["value"],
+                                }
+                                cookies.append(cookie)
+                            if customization is True:
+                                await lib.customization(tab)
+                            tab.set.cookies.clear()
+                            tab.clear_cache()
+                            chrome.set.cookies.clear()
+                            chrome.clear_cache()
+                            chrome.quit()
+                            accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword})
+                            bar.update(1)
+                            bar.close()
                     else:
+                        bar.set_description("Clearing cache and data")
                         for i in tab.cookies():
                             cookie = {
                                 "name": i["name"],
@@ -211,23 +228,43 @@ async def main():
                         print(
                             "\nFailed to find verification email. You may need to verify it manually. Skipping and continuing...\n"
                         )
-            except Exception as e:
-                for i in tab.cookies():
-                    cookie = {
-                        "name": i["name"],
-                        "value": i["value"],
-                    }
-                    cookies.append(cookie)
-                if customization is True:
-                    await lib.customization(tab)
-                tab.set.cookies.clear()
-                tab.clear_cache()
-                chrome.set.cookies.clear()
-                chrome.clear_cache()
-                chrome.quit()
-                accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword})
-                bar.close()
-                print(f"\nFailed to find email verification element. You may need to verify the account manually. Skipping and continuing...\n{e}\n")
+                except Exception as e:
+                    for i in tab.cookies():
+                        cookie = {
+                            "name": i["name"],
+                            "value": i["value"],
+                        }
+                        cookies.append(cookie)
+                    if customization is True:
+                        await lib.customization(tab)
+                    tab.set.cookies.clear()
+                    tab.clear_cache()
+                    chrome.set.cookies.clear()
+                    chrome.clear_cache()
+                    chrome.quit()
+                    accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword})
+                    bar.close()
+                    print(f"\nFailed to find email verification element. You may need to verify the account manually. Skipping and continuing...\n{e}\n")
+            for i in tab.cookies():
+                bar.update(29)
+                bar.set_description("Clearing cache and data")
+                cookie = {
+                    "name": i["name"],
+                    "value": i["value"],
+                }
+                cookies.append(cookie)
+            if customization is True:
+                await lib.customization(tab)
+            tab.set.cookies.clear()
+            tab.clear_cache()
+            chrome.set.cookies.clear()
+            chrome.clear_cache()
+            chrome.quit()
+            email = "N/A"
+            emailPassword = "N/A"
+            accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword})
+            bar.update(1)
+            bar.close()
 
     with open("accounts.txt", "a") as f:
         for account in accounts:
