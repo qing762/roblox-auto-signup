@@ -245,26 +245,27 @@ async def main():
                     accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword})
                     bar.close()
                     print(f"\nFailed to find email verification element. You may need to verify the account manually. Skipping and continuing...\n{e}\n")
-            for i in tab.cookies():
-                bar.update(29)
-                bar.set_description("Clearing cache and data")
-                cookie = {
-                    "name": i["name"],
-                    "value": i["value"],
-                }
-                cookies.append(cookie)
-            if customization is True:
-                await lib.customization(tab)
-            tab.set.cookies.clear()
-            tab.clear_cache()
-            chrome.set.cookies.clear()
-            chrome.clear_cache()
-            chrome.quit()
-            email = "N/A"
-            emailPassword = "N/A"
-            accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword})
-            bar.update(1)
-            bar.close()
+            else:
+                for i in tab.cookies():
+                    bar.update(29)
+                    bar.set_description("Clearing cache and data")
+                    cookie = {
+                        "name": i["name"],
+                        "value": i["value"],
+                    }
+                    cookies.append(cookie)
+                if customization is True:
+                    await lib.customization(tab)
+                tab.set.cookies.clear()
+                tab.clear_cache()
+                chrome.set.cookies.clear()
+                chrome.clear_cache()
+                chrome.quit()
+                email = "N/A"
+                emailPassword = "N/A"
+                accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword})
+                bar.update(1)
+                bar.close()
 
     with open("accounts.txt", "a") as f:
         for account in accounts:
