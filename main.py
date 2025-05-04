@@ -1,6 +1,7 @@
 import asyncio
 import warnings
 import json
+import time
 import os
 from datetime import datetime
 from DrissionPage import Chromium, ChromiumOptions
@@ -160,6 +161,7 @@ async def main():
             tab.ele("#YearDropdown").select.by_value(str(currentYear))
             tab.ele("#signup-username").input(username)
             tab.ele("#signup-password").input(passw)
+            time.sleep(1)
             tab.ele("#signup-button").click()
         except Exception as e:
             print(f"\nAn error occurred\n{e}\n")
