@@ -32,7 +32,7 @@ class Main():
             latestVer = resp.json()["tag_name"]
 
             if getattr(sys, 'frozen', False):
-                import version
+                import version  # type: ignore
                 currentVer = version.__version__
             else:
                 with open("version.txt", "r") as file:

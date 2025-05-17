@@ -17,7 +17,7 @@ warnings.filterwarnings("ignore", category=TqdmExperimentalWarning)
 async def main():
     lib = Main()
     co = ChromiumOptions()
-    co.incognito().auto_port().mute(True)
+    co.auto_port().mute(True)
 
     print("Checking for updates...")
     await lib.checkUpdate()
@@ -89,6 +89,10 @@ async def main():
         "\nWould you like to use a proxy?\nPlease enter the proxy IP and port in the format of IP:PORT (Example: http://localhost:1080). Press enter to skip.\nProxy: "
     )
 
+    incognitoUsage = input(
+        "\nWould you like to use incognito mode? [y/n] (Default: Yes): "
+    )
+
     accounts = []
     cookies = []
 
@@ -124,6 +128,9 @@ async def main():
         else:
             print(lib.testProxy(proxyUsage)[1])
 
+    if incognitoUsage.lower() == "y" or incognitoUsage == "":
+        co.incognito()
+
     for x in range(int(executionCount)):
         if nameFormat:
             username = lib.usernamecreator(nameFormat)
@@ -148,6 +155,7 @@ async def main():
 
         try:
             tab = chrome.new_tab("https://www.roblox.com/CreateAccount")
+            lang = tab.run_js_loaded("return window.navigator.userLanguage || window.navigator.language").split("-")[0]
             bdaymonthelement = tab.ele("#MonthDropdown")
             currentMonth = datetime.now().strftime("%b")
             bdaymonthelement.select.by_value(currentMonth)
@@ -168,7 +176,10 @@ async def main():
         finally:
             bar.set_description(f"Signup process [{x + 1}/{executionCount}]")
             bar.update(50)
-            tab.wait.url_change("https://www.roblox.com/home", timeout=float('inf'))
+            if lang == "en":
+                tab.wait.url_change("https://www.roblox.com/home", timeout=float('inf'))
+            else:
+                tab.wait.url_change(f"https://www.roblox.com/{lang}/home", timeout=float('inf'))
             if verification is True:
                 try:
                     tab.ele(".btn-primary-md btn-primary-md btn-min-width").click()
