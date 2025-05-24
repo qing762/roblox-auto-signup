@@ -4,7 +4,7 @@ import json
 import time
 import os
 from datetime import datetime
-from DrissionPage import Chromium, ChromiumOptions
+from DrissionPage import Chromium, ChromiumOptions, errors
 from DrissionPage.common import wait_until
 from tqdm import TqdmExperimentalWarning
 from tqdm.rich import tqdm
@@ -144,6 +144,13 @@ async def main():
         page.set.window.max()
         if verification is True:
             page.get("https://mail.tm/en")
+            try:
+                frame = page.get_frame('#sp_message_iframe_1301373')
+                if frame:
+                    frame('xpath://*[@id="notice"]/div[3]/div[2]/button').click()
+                    time.sleep(1)
+            except errors.ElementNotFoundError:
+                pass
             page.ele('xpath://*[@id="__nuxt"]/div[1]/div[2]/div/div/div[2]/button[3]').click()
             while True:
                 email = page.ele('xpath://*[@id="reka-dropdown-menu-content-v-1-9"]/div[1]/div/div/p[2]').text
