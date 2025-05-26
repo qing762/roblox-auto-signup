@@ -177,7 +177,7 @@ async def main():
             tab.ele("#signup-username").input(username)
             tab.ele("#signup-password").input(passw)
             time.sleep(1)
-            tab.ele("#signup-button").click()
+            tab.ele("@@id=signup-button@@text()=Sign Up").click()
         except Exception as e:
             print(f"\nAn error occurred\n{e}\n")
         finally:
