@@ -27,7 +27,7 @@ async def main():
             "\033[1m"
             "\n(RECOMMENDED) Press enter in order to use the default browser path (If you have Chrome installed)"
             "\033[0m"
-            "\nIf you prefer to use other Chromium browser other than Chrome, please enter its execupagele path here. (e.g: C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe)"
+            "\nIf you prefer to use other Chromium browser other than Chrome, please enter its executable path here. (e.g: C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe)"
             "\nHere are some supported browsers that are tested and able to use:"
             "\n- Chrome Browser"
             "\n- Brave Browser"
