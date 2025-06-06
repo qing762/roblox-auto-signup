@@ -145,7 +145,7 @@ async def main():
         if verification is True:
             page.get("https://mail.tm/en")
             try:
-                frame = page.get_frame('#sp_message_iframe_1301373')
+                frame = page.get_frame('@@title=SP Consent Message@@id^sp_message_iframe_')
                 if frame:
                     frame('xpath://*[@id="notice"]/div[3]/div[2]/button').click()
                     time.sleep(1)
@@ -153,8 +153,8 @@ async def main():
                 pass
             page.ele('xpath://*[@id="__nuxt"]/div[1]/div[2]/div/div/div[2]/button[3]').click()
             while True:
-                email = page.ele('xpath://*[@id="reka-dropdown-menu-content-v-1-9"]/div[1]/div/div/p[2]').text
-                emailPassword = page.ele('xpath://*[@id="reka-dropdown-menu-content-v-1-9"]/div[1]/div/div/p[3]/span').text
+                email = page.ele('xpath://*[@id="reka-dropdown-menu-content-v-1-9"]/div/div[1]/div/div/p[2]').text
+                emailPassword = page.ele('xpath://*[@id="reka-dropdown-menu-content-v-1-9"]/div/div[1]/div/div/p[3]/span').text
                 if email != "..." and emailPassword != "...":
                     break
             bar.set_description(f"Account generation process [{x + 1}/{executionCount}]")
@@ -163,6 +163,10 @@ async def main():
         try:
             tab = chrome.new_tab("https://www.roblox.com/CreateAccount")
             lang = tab.run_js_loaded("return window.navigator.userLanguage || window.navigator.language").split("-")[0]
+            try:
+                tab.ele('@@class=btn-cta-lg cookie-btn btn-primary-md btn-min-width@@text()=Accept All', timeout=3).click()
+            except errors.ElementNotFoundError:
+                pass
             bdaymonthelement = tab.ele("#MonthDropdown")
             currentMonth = datetime.now().strftime("%b")
             bdaymonthelement.select.by_value(currentMonth)
