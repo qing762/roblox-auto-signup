@@ -12,6 +12,7 @@ from lib.lib import Main
 
 
 warnings.filterwarnings("ignore", category=TqdmExperimentalWarning)
+warnings.filterwarnings("ignore", category=UserWarning, module="pkg_resources")
 
 
 async def main():
@@ -48,7 +49,7 @@ async def main():
                 "\033[1m"
                 "\n(RECOMMENDED) Press enter in order to use the default password"
                 "\033[0m"
-                "\nThe password will be used for the account and email.\nIf you prefer to use your own password, do make sure that your password is strong enough.\nThis script has a built in password complexity checker.\nPassword: \n"
+                "\nThe password will be used for the account and email.\nIf you prefer to use your own password, do make sure that your password is strong enough.\nThis script has a built in password complexity checker.\nPassword: "
             )
             or "Qing762.chy"
         )
