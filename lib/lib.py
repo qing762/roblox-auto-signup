@@ -2,6 +2,8 @@ import string
 import random
 import requests
 import sys
+from pymailtm import MailTm, Account
+from pymailtm.pymailtm import generate_username, CouldNotGetAccountException
 
 
 class Main():
@@ -103,6 +105,36 @@ class Main():
             return True, response.status_code
         except Exception:
             return False, "Proxy test failed! Please ensure that the proxy is working correctly. Skipping proxy usage..."
+
+    def generateEmail(self, password="Qing762.chy"):
+        if not hasattr(self, 'mailtm'):
+            self.mailtm = MailTm()
+        domainList = self.mailtm._get_domains_list()
+        domain = random.choice(domainList)
+        username = generate_username(1)[0].lower()
+        address = f"{username}@{domain}"
+        while True:
+            try:
+                emailID = self.mailtm._make_account_request("accounts", address, password)
+                break
+            except (CouldNotGetAccountException):
+                print("Failed to create account. Retrying...")
+                continue
+        token = requests.post(
+            "https://api.mail.tm/token",
+            json={"address": address, "password": password}
+        ).json()["token"]
+        return address, password, token, emailID
+
+    def fetchVerification(self, address=None, password=None, emailID=None):
+        if not address or not password or not emailID:
+            raise ValueError("Address, password, and emailID must be provided.")
+        if not hasattr(self, 'mailtm'):
+            self.mailtm = MailTm()
+        if not hasattr(self, 'account'):
+            self.account = Account(emailID, address, password)
+        messages = self.account.get_messages()
+        return messages
 
 
 if __name__ == "__main__":

@@ -3,9 +3,9 @@ import warnings
 import json
 import time
 import os
+import re
 from datetime import datetime
 from DrissionPage import Chromium, ChromiumOptions, errors
-from DrissionPage.common import wait_until
 from tqdm import TqdmExperimentalWarning
 from tqdm.rich import tqdm
 from lib.lib import Main
@@ -27,7 +27,7 @@ async def main():
             "\033[1m"
             "\n(RECOMMENDED) Press enter in order to use the default browser path (If you have Chrome installed)"
             "\033[0m"
-            "\nIf you prefer to use other Chromium browser other than Chrome, please enter its executable path here. (e.g: C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe)"
+            "\nIf you prefer to use other Chromium browser other than Chrome, please enter its execupagele path here. (e.g: C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe)"
             "\nHere are some supported browsers that are tested and able to use:"
             "\n- Chrome Browser"
             "\n- Brave Browser"
@@ -48,7 +48,7 @@ async def main():
                 "\033[1m"
                 "\n(RECOMMENDED) Press enter in order to use the default password"
                 "\033[0m"
-                "\nIf you prefer to use your own password, do make sure that your password is strong enough.\nThis script has a built in password complexity checker.\nPassword: "
+                "\nThe password will be used for the account and email.\nIf you prefer to use your own password, do make sure that your password is strong enough.\nThis script has a built in password complexity checker.\nPassword: \n"
             )
             or "Qing762.chy"
         )
@@ -138,157 +138,158 @@ async def main():
             username = lib.usernamecreator()
         bar = tqdm(total=100)
         bar.set_description(f"Initial setup completed [{x + 1}/{executionCount}]")
-        bar.update(20)
+        bar.update(10)
+
         chrome = Chromium(addr_or_opts=co)
-        page = chrome.get_tab(id_or_num=1)
+        page = chrome.latest_tab
         page.set.window.max()
+
         if verification is True:
-            page.get("https://mail.tm/en")
-            try:
-                frame = page.get_frame('@@title=SP Consent Message@@id^sp_message_iframe_')
-                if frame:
-                    frame('xpath://*[@id="notice"]/div[3]/div[2]/button').click()
-                    time.sleep(1)
-            except errors.ElementNotFoundError:
-                pass
-            page.ele('xpath://*[@id="__nuxt"]/div[1]/div[2]/div/div/div[2]/button[3]').click()
-            while True:
-                email = page.ele('xpath://*[@id="reka-dropdown-menu-content-v-1-9"]/div/div[1]/div/div/p[2]').text
-                emailPassword = page.ele('xpath://*[@id="reka-dropdown-menu-content-v-1-9"]/div/div[1]/div/div/p[3]/span').text
-                if email != "..." and emailPassword != "...":
-                    break
-            bar.set_description(f"Account generation process [{x + 1}/{executionCount}]")
-            bar.update(20)
+            email, emailPassword, token, emailID = lib.generateEmail(passw)
+            bar.set_description(f"Generated email [{x + 1}/{executionCount}]")
+            bar.update(10)
 
         try:
-            tab = chrome.new_tab("https://www.roblox.com/CreateAccount")
-            lang = tab.run_js_loaded("return window.navigator.userLanguage || window.navigator.language").split("-")[0]
+            page.get("https://www.roblox.com/CreateAccount")
+            lang = page.run_js_loaded("return window.navigator.userLanguage || window.navigator.language").split("-")[0]
             try:
-                tab.ele('@@class=btn-cta-lg cookie-btn btn-primary-md btn-min-width@@text()=Accept All', timeout=3).click()
+                page.ele('@@class=btn-cta-lg cookie-btn btn-primary-md btn-min-width@@text()=Accept All', timeout=3).click()
             except errors.ElementNotFoundError:
                 pass
-            bdaymonthelement = tab.ele("#MonthDropdown")
+            bdaymonthelement = page.ele("#MonthDropdown")
             currentMonth = datetime.now().strftime("%b")
             bdaymonthelement.select.by_value(currentMonth)
-            bdaydayelement = tab.ele("css:DayDropdown")
+            bdaydayelement = page.ele("css:DayDropdown")
             currentDay = datetime.now().day
             if currentDay <= 9:
                 bdaydayelement.select.by_value(f"0{currentDay}")
             else:
                 bdaydayelement.select.by_value(str(currentDay))
             currentYear = datetime.now().year - 19
-            tab.ele("#YearDropdown").select.by_value(str(currentYear))
-            tab.ele("#signup-username").input(username)
-            tab.ele("#signup-password").input(passw)
+            page.ele("#YearDropdown").select.by_value(str(currentYear))
+            page.ele("#signup-username").input(username)
+            page.ele("#signup-password").input(passw)
             time.sleep(1)
-            tab.ele("@@id=signup-button@@text()=Sign Up").click()
+            page.ele("@@id=signup-button@@text()=Sign Up").click()
+            bar.set_description(f"Signup submitted [{x + 1}/{executionCount}]")
+            bar.update(20)
         except Exception as e:
             print(f"\nAn error occurred\n{e}\n")
         finally:
-            bar.set_description(f"Signup process [{x + 1}/{executionCount}]")
-            bar.update(50)
             if lang == "en":
-                tab.wait.url_change("https://www.roblox.com/home", timeout=float('inf'))
+                page.wait.url_change("https://www.roblox.com/home", timeout=float('inf'))
             else:
-                tab.wait.url_change(f"https://www.roblox.com/{lang}/home", timeout=float('inf'))
+                page.wait.url_change(f"https://www.roblox.com/{lang}/home", timeout=float('inf'))
+            bar.set_description(f"Signup process [{x + 1}/{executionCount}]")
+            bar.update(20)
+
             if verification is True:
                 try:
-                    tab.ele(".btn-primary-md btn-primary-md btn-min-width").click()
-                    tab.ele(". form-control input-field verification-upsell-modal-input").input(email)
-                    tab.ele(".modal-button verification-upsell-btn btn-cta-md btn-min-width").click()
-
-                    if tab.ele(".verification-upsell-text-body", timeout=60):
+                    page.ele(".btn-primary-md btn-primary-md btn-min-width").click()
+                    page.ele(". form-control input-field verification-upsell-modal-input").input(email)
+                    page.ele(".modal-button verification-upsell-btn btn-cta-md btn-min-width").click()
+                    if page.ele(".verification-upsell-text-body", timeout=60):
                         link = None
-                        page.get("https://mail.tm/en")
-                        page.ele('xpath://*[@id="__nuxt"]/div[1]/div[1]/div/div[2]/nav/a[2]').click()
-                        mail = page.ele('xpath://*[@id="__nuxt"]/div[1]/div[2]/main/div[2]/div[2]/ul/li/a')
-                        wait_until(
-                            lambda: mail,
-                            timeout=100
-                        )
-                        page.get(mail.attr("href"))
-                        link = page.ele('xpath:/html/body/center/div/table/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td/table[10]/tbody/tr/td/table/tbody/tr/td/a').attr("href")
+                        while True:
+                            messages = lib.fetchVerification(email, emailPassword, emailID)
+                            if len(messages) > 0:
+                                break
+                        msg = messages[0]
+                        body = getattr(msg, 'text', None)
+                        if not body and hasattr(msg, 'html') and msg.html:
+                            body = msg.html[0]
+                        if body:
+                            match = re.search(r'https://www\.roblox\.com/account/settings/verify-email\?ticket=[^\s)"]+', body)
+                            if match:
+                                link = match.group(0)
                         if link:
                             bar.set_description(
                                 f"Verifying email address [{x + 1}/{executionCount}]"
                             )
                             bar.update(20)
-                            tab.get(link)
-                            bar.set_description("Clearing cache and data")
-                            bar.update(9)
-                            for i in tab.cookies():
-                                cookie = {
-                                    "name": i["name"],
-                                    "value": i["value"],
-                                }
-                                cookies.append(cookie)
-                            if customization is True:
-                                await lib.customization(tab)
-                            tab.set.cookies.clear()
-                            tab.clear_cache()
-                            chrome.set.cookies.clear()
-                            chrome.clear_cache()
-                            chrome.quit()
-                            accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword})
-                            bar.update(1)
-                            bar.close()
+                            page.get(link)
+                        else:
+                            bar.set_description(f"Email verification link not found [{x + 1}/{executionCount}]")
+                            bar.update(10)
                     else:
-                        bar.set_description("Clearing cache and data")
-                        for i in tab.cookies():
-                            cookie = {
-                                "name": i["name"],
-                                "value": i["value"],
-                            }
-                            cookies.append(cookie)
-                        if customization is True:
-                            await lib.customization(tab)
-                        tab.set.cookies.clear()
-                        tab.clear_cache()
-                        chrome.set.cookies.clear()
-                        chrome.clear_cache()
-                        chrome.quit()
-                        accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword})
-                        bar.close()
-                        print(
-                            "\nFailed to find verification email. You may need to verify it manually. Skipping and continuing...\n"
-                        )
+                        bar.set_description(f"Verification email not found [{x + 1}/{executionCount}]")
+                        bar.update(10)
+
+                    bar.set_description(f"Saving cookies and clearing data [{x + 1}/{executionCount}]")
+                    for i in page.cookies():
+                        cookie = {
+                            "name": i["name"],
+                            "value": i["value"],
+                        }
+                        cookies.append(cookie)
+                    bar.update(5)
+
+                    if customization is True:
+                        bar.set_description(f"Customizing account [{x + 1}/{executionCount}]")
+                        await lib.customization(page)
+                        bar.update(5)
+                    else:
+                        bar.set_description(f"Skipping customization [{x + 1}/{executionCount}]")
+                        bar.update(5)
+
+                    page.set.cookies.clear()
+                    page.clear_cache()
+                    chrome.set.cookies.clear()
+                    chrome.clear_cache()
+                    chrome.quit()
+                    accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword})
+                    bar.set_description(f"Finished account generation [{x + 1}/{executionCount}]")
+                    bar.update(10)
+                    bar.close()
                 except Exception as e:
-                    for i in tab.cookies():
+                    print(f"\nAn error occurred during email verification\n{e}\n")
+                    for i in page.cookies():
                         cookie = {
                             "name": i["name"],
                             "value": i["value"],
                         }
                         cookies.append(cookie)
                     if customization is True:
-                        await lib.customization(tab)
-                    tab.set.cookies.clear()
-                    tab.clear_cache()
+                        bar.set_description(f"Attempt to customize account [{x + 1}/{executionCount}]")
+                        await lib.customization(page)
+                        bar.update(5)
+                    page.set.cookies.clear()
+                    page.clear_cache()
                     chrome.set.cookies.clear()
                     chrome.clear_cache()
                     chrome.quit()
                     accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword})
+                    bar.set_description(f"Finished account generation with errors [{x + 1}/{executionCount}]")
+                    bar.update(10)
                     bar.close()
                     print(f"\nFailed to find email verification element. You may need to verify the account manually. Skipping and continuing...\n{e}\n")
             else:
-                for i in tab.cookies():
-                    bar.update(29)
-                    bar.set_description("Clearing cache and data")
+                for i in page.cookies():
                     cookie = {
                         "name": i["name"],
                         "value": i["value"],
                     }
                     cookies.append(cookie)
+                bar.update(10)
+
                 if customization is True:
-                    await lib.customization(tab)
-                tab.set.cookies.clear()
-                tab.clear_cache()
+                    bar.set_description(f"Customizing account [{x + 1}/{executionCount}]")
+                    await lib.customization(page)
+                    bar.update(20)
+                else:
+                    bar.set_description(f"Skipping customization [{x + 1}/{executionCount}]")
+                    bar.update(20)
+
+                page.set.cookies.clear()
+                page.clear_cache()
                 chrome.set.cookies.clear()
                 chrome.clear_cache()
                 chrome.quit()
                 email = "N/A"
                 emailPassword = "N/A"
                 accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword})
-                bar.update(1)
+                bar.set_description(f"Finished account generation [{x + 1}/{executionCount}]")
+                bar.update(20)
                 bar.close()
 
     with open("accounts.txt", "a") as f:
