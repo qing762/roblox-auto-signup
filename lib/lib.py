@@ -2,6 +2,9 @@ import string
 import random
 import requests
 import sys
+import uuid
+import hmac
+import hashlib
 from pymailtm import MailTm, Account
 from pymailtm.pymailtm import generate_username, CouldNotGetAccountException
 
@@ -42,12 +45,13 @@ class Main():
 
             if currentVer < latestVer:
                 print(f"Update available: {latestVer} (Current version: {currentVer})\nYou can download the latest version from: https://github.com/qing762/roblox-auto-signup/releases/latest")
+                return currentVer
             else:
                 print(f"You are running the latest version: {currentVer}")
-                pass
+                return currentVer
         except Exception as e:
             print(f"An error occurred: {e}")
-            pass
+            return currentVer
 
     async def checkPassword(self, username, password):
         token = requests.post("https://auth.roblox.com/v2/login", headers={"User-Agent": "Mozilla/5.0"}).headers.get("x-csrf-token")
@@ -135,6 +139,85 @@ class Main():
             self.account = Account(emailID, address, password)
         messages = self.account.get_messages()
         return messages
+
+    def collectAnalytics(self, version):
+        def prompt():
+            while True:
+                analytics = input("\nNo personal data is collected, but anonymous usage statistics help us improve. Allow data collection? [y/n]: ").strip().lower()
+                if analytics in ("y", "yes", ""):
+                    userId = str(uuid.uuid4())
+                    with open("analytics.txt", "w") as file:
+                        file.write("DO NOT CHANGE ANYTHING IN THIS FILE\n")
+                        file.write("analytics=1\n")
+                        file.write(f"userID={userId}\n")
+                    print("Analytics collection enabled.")
+                    self.sendAnalytics(version, userId)
+                    return True
+                elif analytics in ("n", "no"):
+                    with open("analytics.txt", "w") as file:
+                        file.write("DO NOT CHANGE ANYTHING IN THIS FILE\n")
+                        file.write("analytics=0\n")
+                    print("Analytics collection disabled.")
+                    return False
+                else:
+                    continue
+
+        try:
+            with open("analytics.txt", "r") as file:
+                lines = file.readlines()
+                analytics = None
+                userId = None
+                for line in lines:
+                    if line.startswith("analytics="):
+                        analytics = line.strip().split("=", 1)[1]
+                    elif line.startswith("userID="):
+                        userId = line.strip().split("=", 1)[1]
+                if analytics == "1":
+                    self.sendAnalytics(version, userId)
+                elif analytics == "0":
+                    return False
+                else:
+                    return prompt()
+        except FileNotFoundError:
+            return prompt()
+
+    def sendAnalytics(self, version, userId=None):
+        # DO NOT CHANGE THIS KEY, IT IS USED FOR SIGNING THE ANALYTICS DATA
+        key = b"Qing762.chy"
+
+        # THIS USERID IS NOT RELATED TO THE USER'S ROBLOX ACCOUNT, IT IS JUST A UNIQUE ID FOR ANALYTICS PURPOSES
+        if userId is None:
+            userIdValue = None
+            try:
+                with open("analytics.txt", "r") as file:
+                    for line in file:
+                        if line.startswith("userID="):
+                            userIdValue = line.strip().split("=", 1)[1]
+                            break
+            except FileNotFoundError:
+                userIdValue = str(uuid.uuid4())
+            userId = userIdValue or str(uuid.uuid4())
+
+        message = userId.encode()
+        signature = hmac.new(key, message, hashlib.sha256).hexdigest()
+
+        data = {
+            "userId": userId,
+            "signature": signature,
+            "version": version
+        }
+        try:
+            response = requests.post(
+                "https://qing762.is-a.dev/analytics/roblox",
+                json=data,
+                headers={"Content-Type": "application/json"}
+            )
+            if response.status_code == 200:
+                pass
+            else:
+                print(f"\nFailed to send analytics data. Status code: {response.status_code}")
+        except requests.RequestException as e:
+            print(f"\nAn error occurred while sending analytics data: {e}")
 
 
 if __name__ == "__main__":

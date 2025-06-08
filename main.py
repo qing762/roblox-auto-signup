@@ -3,6 +3,7 @@ import warnings
 import json
 import time
 import os
+import sys
 import re
 from datetime import datetime
 from DrissionPage import Chromium, ChromiumOptions, errors
@@ -21,7 +22,10 @@ async def main():
     co.auto_port().mute(True)
 
     print("Checking for updates...")
-    await lib.checkUpdate()
+    version = await lib.checkUpdate()
+
+    if "--no-analytics" not in sys.argv:
+        lib.collectAnalytics(version)
 
     while True:
         browserPath = input(

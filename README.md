@@ -57,6 +57,24 @@ The process begins by utilizing the [Mail.tm](https://mail.tm/) service to obtai
 And you're all set! Follow the instructions while interacting with the Python file.
 
 
+## Anonymous Usage Analytics
+
+This tool collects **anonymous usage data** to help to improve its features. 
+
+Here are the list of data that will be collected:
+- Tool version
+- Anonymous user ID (a randomly generated UUID stored locally to distinguish sessions from unique users)
+
+> The UUID is generated once on first run and saved locally. It is not tied to any of your identity.
+
+<ins>**No personal information or sensitive data will be collected.**</ins>
+
+To opt out, you can disable analytics at any time by:
+- Enter `n`or `N` when prompted on the first run of the script.
+- Running the script with `--no-analytics` argument
+- Edit the analytics.txt file and change the value from `analytics=1` to `analytics=0`
+
+
 ## Contributing
 
 Contributions are always welcome!
@@ -75,7 +93,7 @@ If the company wishes to discontinue or terminate this project, please do not he
 
 ## License
 
-[MIT LICENSE](https://choosealicense.com/licenses/mit/)
+Licensed under the GNU General Public License v3.0. See LICENSE for details.
 
 
 ---
