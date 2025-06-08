@@ -4,6 +4,7 @@ import requests
 import sys
 import uuid
 import hmac
+import os
 import hashlib
 from pymailtm import MailTm, Account
 from pymailtm.pymailtm import generate_username, CouldNotGetAccountException
@@ -140,10 +141,10 @@ class Main():
         messages = self.account.get_messages()
         return messages
 
-    def collectAnalytics(self, version):
-        def prompt():
+    def promptAnalytics(self):
+        if not os.path.exists("analytics.txt"):
             while True:
-                analytics = input("\nNo personal data is collected, but anonymous usage statistics help us improve. Allow data collection? [y/n]: ").strip().lower()
+                analytics = input("\nNo personal data is collected, but anonymous usage statistics help us improve. Allow data collection? [y/n] (Default: Yes): ").strip().lower()
                 if analytics in ("y", "yes", ""):
                     userId = str(uuid.uuid4())
                     with open("analytics.txt", "w") as file:
@@ -151,7 +152,6 @@ class Main():
                         file.write("analytics=1\n")
                         file.write(f"userID={userId}\n")
                     print("Analytics collection enabled.")
-                    self.sendAnalytics(version, userId)
                     return True
                 elif analytics in ("n", "no"):
                     with open("analytics.txt", "w") as file:
@@ -162,24 +162,20 @@ class Main():
                 else:
                     continue
 
-        try:
-            with open("analytics.txt", "r") as file:
-                lines = file.readlines()
-                analytics = None
-                userId = None
-                for line in lines:
-                    if line.startswith("analytics="):
-                        analytics = line.strip().split("=", 1)[1]
-                    elif line.startswith("userID="):
-                        userId = line.strip().split("=", 1)[1]
-                if analytics == "1":
-                    self.sendAnalytics(version, userId)
-                elif analytics == "0":
-                    return False
-                else:
-                    return prompt()
-        except FileNotFoundError:
-            return prompt()
+    def checkAnalytics(self, version):
+        with open("analytics.txt", "r") as file:
+            lines = file.readlines()
+            analytics = None
+            userId = None
+            for line in lines:
+                if line.startswith("analytics="):
+                    analytics = line.strip().split("=", 1)[1]
+                elif line.startswith("userID="):
+                    userId = line.strip().split("=", 1)[1]
+            if analytics == "1":
+                self.sendAnalytics(version, userId)
+            elif analytics == "0":
+                return False
 
     def sendAnalytics(self, version, userId=None):
         # DO NOT CHANGE THIS KEY, IT IS USED FOR SIGNING THE ANALYTICS DATA

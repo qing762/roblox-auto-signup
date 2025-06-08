@@ -24,8 +24,7 @@ async def main():
     print("Checking for updates...")
     version = await lib.checkUpdate()
 
-    if "--no-analytics" not in sys.argv:
-        lib.collectAnalytics(version)
+    lib.promptAnalytics()
 
     while True:
         browserPath = input(
@@ -137,6 +136,8 @@ async def main():
         co.incognito()
 
     for x in range(int(executionCount)):
+        if "--no-analytics" not in sys.argv:
+            lib.checkAnalytics(version)
         if nameFormat:
             username = lib.usernamecreator(nameFormat)
         else:
