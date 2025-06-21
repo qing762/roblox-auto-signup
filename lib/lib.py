@@ -3,11 +3,12 @@ import random
 import requests
 import sys
 import uuid
+import time
 import hmac
 import os
 import hashlib
 from pymailtm import MailTm, Account
-from pymailtm.pymailtm import generate_username, CouldNotGetAccountException
+from pymailtm.pymailtm import generate_username
 
 
 class Main():
@@ -120,11 +121,19 @@ class Main():
         address = f"{username}@{domain}"
         while True:
             try:
-                emailID = self.mailtm._make_account_request("accounts", address, password)
-                break
-            except (CouldNotGetAccountException):
-                print("Failed to create account. Retrying...")
-                continue
+                emailID = requests.post("https://api.mail.tm/accounts", json={"address": address, "password": password})
+                if emailID.status_code == 201 and "id" in emailID.json():
+                    break
+                else:
+                    print(f"Failed to create email with address {address}. Sleeping for 5 seconds then will retry...")
+                    time.sleep(5)
+                    username = generate_username(1)[0].lower()
+                    address = f"{username}@{domain}"
+            except Exception as e:
+                print(f"Error creating email: {e}. Sleeping for 5 seconds then will retry...")
+                time.sleep(5)
+                username = generate_username(1)[0].lower()
+                address = f"{username}@{domain}"
         token = requests.post(
             "https://api.mail.tm/token",
             json={"address": address, "password": password}
