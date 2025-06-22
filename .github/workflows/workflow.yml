@@ -37,7 +37,7 @@ jobs:
       - name: Build executable
         run: |
           echo "__version__ = 'v1.${{ github.run_number }}'" > version.py
-          pyinstaller --onefile --clean --add-data "version.py:." --name "roblox-auto-signup v1.${{ github.run_number }}.exe" main.py
+          pyinstaller --onefile --clean --add-data "version.py:." --add-data "$(python -c "import random_username, os; print(os.path.join(os.path.dirname(random_username.__file__), 'data'))")${{ runner.os == 'Windows' && ';' || ':' }}random_username/data" --name "roblox-auto-signup v1.${{ github.run_number }}.exe" main.py
 
       - name: Upload Executable
         uses: actions/upload-artifact@v4
