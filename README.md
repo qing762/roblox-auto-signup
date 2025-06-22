@@ -16,15 +16,17 @@ The process begins by utilizing the [Mail.tm](https://mail.tm/) service to obtai
 ## Features
 
 - Able to use any Chromium-based browser.
+- Able to use non authenticated proxy.
 - Be able to prompt to change to your own password instead of using the default one.
 - Password complexity checker for custom password.
 - Automatically checks if the username generated is taken or not. If yes, a new one would be generated.
 - Customizable username prefix.
 - Able to randomly customize the account avatar (Clothes, Body size, etc)
 - Error handling.
-- The script does all the job itself
-- No webdriver required
-- Fast execution time
+- Update checker functionality.
+- The script does all the job by itself.
+- No webdriver required.
+- Fast execution time.
 
 > **Warning**
 > The script does not solves FunCaptcha from Roblox, I haven't found an efficient way to do so. For now, you have to solve it by yourself.
@@ -39,19 +41,13 @@ The process begins by utilizing the [Mail.tm](https://mail.tm/) service to obtai
 - The account details should be generated at the `accounts.txt` file under the same directory.
 
 #### 2. Python file method:
- - First, clone this repository:
- ```shell
- git clone https://github.com/qing762/roblox-auto-signup/
+ - First, ensure that Python is installed:
+ ``` shell
+ https://www.python.org/downloads/
  ```
-
- - Install the necessary dependencies:
+ - Run the following command:
  ```shell
- pip install -r requirements.txt
- ```
-
- - Finally, run the Python file:
- ```shell
- python main.py
+ git clone https://github.com/qing762/roblox-auto-signup/ && cd roblox-auto-signup && pip install -r requirements.txt && python main.py
  ```
 
 And you're all set! Follow the instructions while interacting with the Python file.
@@ -93,7 +89,7 @@ If the company wishes to discontinue or terminate this project, please do not he
 
 ## License
 
-Licensed under the GNU General Public License v3.0. See LICENSE for details.
+Licensed under the GNU General Public License v3.0. See [LICENSE](https://github.com/qing762/roblox-auto-signup/blob/main/LICENSE) for details.
 
 
 ---
