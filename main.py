@@ -159,7 +159,7 @@ async def main():
             page.get("https://www.roblox.com/CreateAccount")
             lang = page.run_js_loaded("return window.navigator.userLanguage || window.navigator.language").split("-")[0]
             try:
-                page.ele('@@class=btn-cta-lg cookie-btn btn-primary-md btn-min-width@@text()=Accept All', timeout=3).click()
+                page.ele('@class=btn-cta-lg cookie-btn btn-primary-md btn-min-width', timeout=3).click()
             except errors.ElementNotFoundError:
                 pass
             bdaymonthelement = page.ele("#MonthDropdown")
@@ -176,7 +176,7 @@ async def main():
             page.ele("#signup-username").input(username)
             page.ele("#signup-password").input(passw)
             time.sleep(1)
-            page.ele("@@id=signup-button@@text()=Sign Up").click()
+            page.ele("@@id=signup-button@@name=signupSubmit@@class=btn-primary-md signup-submit-button btn-full-width").click()
             bar.set_description(f"Signup submitted [{x + 1}/{executionCount}]")
             bar.update(20)
         except Exception as e:
@@ -192,34 +192,39 @@ async def main():
             if verification is True:
                 try:
                     page.ele(".btn-primary-md btn-primary-md btn-min-width").click()
-                    page.ele(". form-control input-field verification-upsell-modal-input").input(email)
-                    page.ele(".modal-button verification-upsell-btn btn-cta-md btn-min-width").click()
-                    if page.ele(".verification-upsell-text-body", timeout=60):
-                        link = None
-                        while True:
-                            messages = lib.fetchVerification(email, emailPassword, emailID)
-                            if len(messages) > 0:
-                                break
-                        msg = messages[0]
-                        body = getattr(msg, 'text', None)
-                        if not body and hasattr(msg, 'html') and msg.html:
-                            body = msg.html[0]
-                        if body:
-                            match = re.search(r'https://www\.roblox\.com/account/settings/verify-email\?ticket=[^\s)"]+', body)
-                            if match:
-                                link = match.group(0)
-                        if link:
-                            bar.set_description(
-                                f"Verifying email address [{x + 1}/{executionCount}]"
-                            )
-                            bar.update(20)
-                            page.get(link)
+                    if page.ele("@@class=phone-verification-nonpublic-text text-description font-caption-body", timeout=10):
+                        print("Found phone verification element, skipping email verification.\n")
+                        bar.update(40)
+                        bar.set_description(f"Skipping email verification [{x + 1}/{executionCount}]")
+                    elif page.ele(".form-control input-field verification-upsell-modal-input"):
+                        page.ele(".form-control input-field verification-upsell-modal-input").input(email)
+                        page.ele(".modal-button verification-upsell-btn btn-cta-md btn-min-width").click()
+                        if page.ele(".verification-upsell-text-body", timeout=60):
+                            link = None
+                            while True:
+                                messages = lib.fetchVerification(email, emailPassword, emailID)
+                                if len(messages) > 0:
+                                    break
+                            msg = messages[0]
+                            body = getattr(msg, 'text', None)
+                            if not body and hasattr(msg, 'html') and msg.html:
+                                body = msg.html[0]
+                            if body:
+                                match = re.search(r'https://www\.roblox\.com/account/settings/verify-email\?ticket=[^\s)"]+', body)
+                                if match:
+                                    link = match.group(0)
+                            if link:
+                                bar.set_description(
+                                    f"Verifying email address [{x + 1}/{executionCount}]"
+                                )
+                                bar.update(20)
+                                page.get(link)
+                            else:
+                                bar.set_description(f"Email verification link not found [{x + 1}/{executionCount}]")
+                                bar.update(10)
                         else:
-                            bar.set_description(f"Email verification link not found [{x + 1}/{executionCount}]")
+                            bar.set_description(f"Verification email not found [{x + 1}/{executionCount}]")
                             bar.update(10)
-                    else:
-                        bar.set_description(f"Verification email not found [{x + 1}/{executionCount}]")
-                        bar.update(10)
 
                     bar.set_description(f"Saving cookies and clearing data [{x + 1}/{executionCount}]")
                     for i in page.cookies():
