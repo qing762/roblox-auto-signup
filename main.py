@@ -188,7 +188,7 @@ async def main():
                 try:
                     page.wait.url_change(f"https://www.roblox.com/{lang}/home", timeout=int(15))
                 except errors.TimeoutError:
-                    page.wait.url_change(f"https://www.roblox.com/home", timeout=int(15))
+                    page.wait.url_change("https://www.roblox.com/home", timeout=int(15))
             bar.set_description(f"Signup process [{x + 1}/{executionCount}]")
             bar.update(20)
 
