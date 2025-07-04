@@ -8,6 +8,7 @@ import os
 import hashlib
 from pymailtm import MailTm, Account
 
+
 class UsernameGenerator:
     # SOURCE: https://github.com/mrsobakin/pungen. Kudos to mrsobakin for the original code.
     CONSONANTS = "bcdfghjklmnpqrstvwxyz"
@@ -17,22 +18,19 @@ class UsernameGenerator:
     DOUBLE_CONS = ("he", "re", "ti", "ti", "hi", "to", "ll", "tt", "nn", "pp", "th", "nd", "st", "qu")
     DOUBLE_VOW = ("ee", "oo", "ei", "ou", "ai", "ea", "an", "er", "in", "on", "at", "es", "en", "of", "ed", "or", "as")
 
-
     def __init__(self, min_length, max_length=None):
         self.set_length(min_length, max_length)
 
-    
     def set_length(self, min_length, max_length):
         if not max_length:
             max_length = min_length
-            
+
         self.min_length = min_length
         self.max_length = max_length
-    
-    
+
     def generate(self):
         username, is_double, num_length = "", False, 0  # reset variables
-        
+
         if random.randrange(10) > 0:
             is_consonant = True
         else:
@@ -69,10 +67,9 @@ class UsernameGenerator:
         if num_length > 0:
             for j in range(num_length):  # loop 1 - 3 times
                 username += str(random.randrange(10))  # append a random number, 0 - 9
-        
+
         return username
-    
-    
+
     def _get_consonant(self, is_double):
         if is_double:
             return random.choice(self.DOUBLE_CONS)  # add two consonants from our pre-defined tuple
@@ -95,7 +92,6 @@ class UsernameGenerator:
             # return a random consonant based on the weight
             return self.CONS_WEIGHTED[weight][random.randrange(len(self.CONS_WEIGHTED[weight]))]
 
-
     def _get_vowel(self, is_double):
         if is_double:
             return random.choice(self.DOUBLE_VOW)  # add two vowels from our pre-defined tuple
@@ -107,6 +103,7 @@ class UsernameGenerator:
                 weight = 1
             # return a random vowel based on the weight
             return self.VOW_WEIGHTED[weight][random.randrange(len(self.VOW_WEIGHTED[weight]))]
+
 
 class Main():
     def usernameCreator(self, nameFormat=None, scrambled=False):
