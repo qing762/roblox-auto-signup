@@ -9,6 +9,16 @@ import hashlib
 from pymailtm import MailTm, Account
 
 
+def getResourcePath(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller"""
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
+
 class UsernameGenerator:
     # SOURCE: https://github.com/mrsobakin/pungen. Kudos to mrsobakin for the original code.
     CONSONANTS = "bcdfghjklmnpqrstvwxyz"
@@ -322,9 +332,9 @@ class Main():
 
     def generateUsername(self, scrambled=None):
         if scrambled is False:
-            verb = random.choice(open('./lib/verbs.txt').read().split()).strip()
-            noun = random.choice(open('./lib/nouns.txt').read().split()).strip()
-            adjective = random.choice(open('./lib/adjectives.txt').read().split()).strip()
+            verb = random.choice(open(getResourcePath('lib/verbs.txt')).read().split()).strip()
+            noun = random.choice(open(getResourcePath('lib/nouns.txt')).read().split()).strip()
+            adjective = random.choice(open(getResourcePath('lib/adjectives.txt')).read().split()).strip()
             number = random.randint(10, 99)
             username = verb + noun + adjective + str(number)
             return username
