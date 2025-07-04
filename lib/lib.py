@@ -1,4 +1,3 @@
-import string
 import random
 import requests
 import sys
@@ -6,21 +5,26 @@ import uuid
 import time
 import hmac
 import os
+import httpimport
 import hashlib
 from pymailtm import MailTm, Account
-from pymailtm.pymailtm import generate_username
+
+with httpimport.remote_repo('https://raw.githubusercontent.com/mrsobakin/pungen/refs/heads/master/'):
+    from pungen import UsernameGenerator as pungen  # type: ignore
 
 
 class Main():
-    def usernamecreator(self, nameFormat=None):
+    def usernameCreator(self, nameFormat=None, scrambled=False):
         counter = 0
         while True:
             if nameFormat:
                 username = f"{nameFormat}_{counter}"
                 counter += 1
             else:
-                characters = string.ascii_letters + string.digits + '._-'
-                username = ''.join(random.choice(characters) for _ in range(random.randint(5, 32)))
+                if scrambled is True:
+                    username = self.generateUsername(scrambled=True)
+                else:
+                    username = self.generateUsername(scrambled=False)
 
             r = requests.get(
                 f"https://auth.roblox.com/v2/usernames/validate?request.username={username}&request.birthday=04%2F15%2F02&request.context=Signup"
@@ -117,7 +121,7 @@ class Main():
             self.mailtm = MailTm()
         domainList = self.mailtm._get_domains_list()
         domain = random.choice(domainList)
-        username = generate_username(1)[0].lower()
+        username = self.generateUsername().lower()
         address = f"{username}@{domain}"
         while True:
             try:
@@ -127,12 +131,12 @@ class Main():
                 else:
                     print(f"Failed to create email with address {address}. Sleeping for 5 seconds then will retry...")
                     time.sleep(5)
-                    username = generate_username(1)[0].lower()
+                    username = self.generateUsername().lower()
                     address = f"{username}@{domain}"
             except Exception as e:
                 print(f"Error creating email: {e}. Sleeping for 5 seconds then will retry...")
                 time.sleep(5)
-                username = generate_username(1)[0].lower()
+                username = self.generateUsername().lower()
                 address = f"{username}@{domain}"
         token = requests.post(
             "https://api.mail.tm/token",
@@ -223,6 +227,18 @@ class Main():
                 print(f"\nFailed to send analytics data. Status code: {response.status_code}")
         except requests.RequestException as e:
             print(f"\nAn error occurred while sending analytics data: {e}")
+
+    def generateUsername(self, scrambled=None):
+        if scrambled is False:
+            verb = random.choice(open('./lib/verbs.txt').read().split()).strip()
+            noun = random.choice(open('./lib/nouns.txt').read().split()).strip()
+            adjective = random.choice(open('./lib/adjectives.txt').read().split()).strip()
+            number = random.randint(10, 99)
+            username = verb + noun + adjective + str(number)
+            return username
+        else:
+            gen = pungen(10, 15)
+            return gen.generate()
 
 
 if __name__ == "__main__":

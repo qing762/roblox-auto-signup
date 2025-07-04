@@ -57,7 +57,7 @@ async def main():
             or "Qing762.chy"
         )
         if passw != "Qing762.chy":
-            result = await lib.checkPassword(lib.usernamecreator(), passw)
+            result = await lib.checkPassword(lib.usernameCreator(), passw)
             print(result)
             if "Password is valid" in result:
                 break
@@ -66,12 +66,16 @@ async def main():
 
     while True:
         verification = input(
-            "\nWould you like to enable email verification? If no you will risk to lose the account. (Hotfix for people who does not have email verification element) [y/n] (Default: Yes): "
+            "\033[1m"
+            "\n(RECOMMENDED) Press enter in order to enable email verification"
+            "\033[0m"
+            "\nIf you prefer to turn off email verification, you will risk to lose the account.It might also applicable for people who does not have email verification element"
+            "\nWould you like to enable email verification? [y/n] (Default: Yes): "
         )
         if verification.lower() in ["y", "n", ""]:
             break
         else:
-            print("Please enter a valid option.")
+            print("\nPlease enter a valid option.")
 
     nameFormat = input(
         "\033[1m"
@@ -80,6 +84,20 @@ async def main():
         "\nIf you prefer to go by your own name prefix, please enter it here.\nIt will go by this example: (If name prefix is 'qing', then the account generated will be named 'qing_0', 'qing_1' and so on)\nName prefix: "
     )
 
+    if nameFormat:
+        scrambledUsername = None
+    else:
+        while True:
+            scrambledUsername = input("\nWould you like to use a scrambled username?\nIf no, the script will try to generate a structured username, this might increase generation time. [y/n] (Default: Yes): ")
+            if scrambledUsername.lower() in ["y", "n", ""]:
+                if scrambledUsername.lower() == "y" or scrambledUsername == "":
+                    scrambledUsername = True
+                else:
+                    scrambledUsername = False
+                break
+            else:
+                print("\nPlease enter a valid option.")
+
     while True:
         customization = input(
             "\nWould you like to customize the account after the generation process with a randomizer? [y/n] (Default: Yes): "
@@ -87,15 +105,20 @@ async def main():
         if customization.lower() in ["y", "n", ""]:
             break
         else:
-            print("Please enter a valid option.")
+            print("\nPlease enter a valid option.")
 
     proxyUsage = input(
         "\nWould you like to use a proxy?\nPlease enter the proxy IP and port in the format of IP:PORT (Example: http://localhost:1080). Press enter to skip.\nProxy: "
     )
 
-    incognitoUsage = input(
-        "\nWould you like to use incognito mode? [y/n] (Default: Yes): "
-    )
+    while True:
+        incognitoUsage = input(
+            "\nWould you like to use incognito mode? [y/n] (Default: Yes): "
+        )
+        if incognitoUsage.lower() in ["y", "n", ""]:
+            break
+        else:
+            print("\nPlease enter a valid option.")
 
     accounts = []
     cookies = []
@@ -139,9 +162,12 @@ async def main():
         if "--no-analytics" not in sys.argv:
             lib.checkAnalytics(version)
         if nameFormat:
-            username = lib.usernamecreator(nameFormat)
+            username = lib.usernameCreator(nameFormat, None)
         else:
-            username = lib.usernamecreator()
+            if scrambledUsername is True:
+                username = lib.usernameCreator(None, scrambled=True)
+            else:
+                username = lib.usernameCreator(None, scrambled=False)
         bar = tqdm(total=100)
         bar.set_description(f"Initial setup completed [{x + 1}/{executionCount}]")
         bar.update(10)
@@ -195,12 +221,12 @@ async def main():
             if verification is True:
                 try:
                     page.ele(".btn-primary-md btn-primary-md btn-min-width").click()
-                    if page.ele("@@class=phone-verification-nonpublic-text text-description font-caption-body", timeout=10):
+                    if page.ele("@@class=phone-verification-nonpublic-text text-description font-caption-body"):
                         print("Found phone verification element, skipping email verification.\n")
                         bar.update(40)
                         bar.set_description(f"Skipping email verification [{x + 1}/{executionCount}]")
-                    elif page.ele(".form-control input-field verification-upsell-modal-input"):
-                        page.ele(".form-control input-field verification-upsell-modal-input").input(email)
+                    elif page.ele(". form-control input-field verification-upsell-modal-input"):
+                        page.ele(". form-control input-field verification-upsell-modal-input").input(email)
                         page.ele(".modal-button verification-upsell-btn btn-cta-md btn-min-width").click()
                         if page.ele(".verification-upsell-text-body", timeout=60):
                             link = None
