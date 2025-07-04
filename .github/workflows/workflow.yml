@@ -49,7 +49,7 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -a "v1.${{ github.run_number }}" -m "Release v1.${{ github.run_number }}"
+          git tag -a "v1.${{ github.run_number }}" -m "v1.${{ github.run_number }}"
           git push origin "v1.${{ github.run_number }}"
 
       - name: Publish code
