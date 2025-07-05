@@ -23,6 +23,8 @@ The process begins by utilizing the [Mail.tm](https://mail.tm/) service to obtai
 - Customizable username prefix.
 - Able to randomly customize the account avatar (Clothes, Body size, etc)
 - Error handling.
+- Compatible with [Roblox Account Manager](https://github.com/ic3w0lf22/Roblox-Account-Manager)
+- Structured username format
 - Update checker functionality.
 - The script does all the job by itself.
 - No webdriver required.

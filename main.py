@@ -383,7 +383,14 @@ async def main():
         pyperclip.copy(accountManagerFormatString)
         print("Account manager format copied to clipboard!")
         print("Select the 'User:Pass' option in Roblox Account Manager and paste it into the input field.")
-        print("Do note that you'll have to complete the signup process manually in Roblox Account Manager.")
+        print("Do note that you'll have to complete the signup process manually in Roblox Account Manager.\n")
+    else:
+        print()
+
+    for i in range(5, 0, -1):
+        print(f"\rExiting in {i} seconds...", end="", flush=True)
+        time.sleep(1)
+    print("\rExiting now...        ")
 
 if __name__ == "__main__":
     asyncio.run(main())
