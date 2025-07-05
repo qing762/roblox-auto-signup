@@ -5,6 +5,7 @@ import time
 import os
 import sys
 import re
+import pyperclip
 from datetime import datetime
 from DrissionPage import Chromium, ChromiumOptions, errors
 from tqdm import TqdmExperimentalWarning
@@ -372,6 +373,17 @@ async def main():
         print(f"Username: {account['username']}, Password: {account['password']}, Email: {account['email']}, Email Password: {account['emailPassword']}")
     print("\033[0m" "\nCredentials saved to accounts.txt\nCookies are saved to cookies.json file\n\nHave fun playing Roblox!")
 
+    accountManagerFormat = input(
+        "\nWould you like to export the account manager format into your clipboard? [y/n] (Default: No): "
+    ) or "n"
+    if accountManagerFormat.lower() in ["y", "yes"]:
+        accountManagerFormatString = ""
+        for account in accounts:
+            accountManagerFormatString += f"{account['username']}:{account['password']}\n"
+        pyperclip.copy(accountManagerFormatString)
+        print("Account manager format copied to clipboard!")
+        print("Select the 'User:Pass' option in Roblox Account Manager and paste it into the input field.")
+        print("Do note that you'll have to complete the signup process manually in Roblox Account Manager.")
 
 if __name__ == "__main__":
     asyncio.run(main())
