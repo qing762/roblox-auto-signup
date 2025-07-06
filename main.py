@@ -390,7 +390,7 @@ async def main():
     for i in range(5, 0, -1):
         print(f"\rExiting in {i} seconds...", end="", flush=True)
         time.sleep(1)
-    print("\rExiting now...        ")
+    print("\rExiting now...")
 
 if __name__ == "__main__":
     asyncio.run(main())
