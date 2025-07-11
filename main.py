@@ -122,7 +122,6 @@ async def main():
             print("\nPlease enter a valid option.")
 
     accounts = []
-    cookies = []
 
     while True:
         executionCount = input(
@@ -176,6 +175,8 @@ async def main():
         chrome = Chromium(addr_or_opts=co)
         page = chrome.latest_tab
         page.set.window.max()
+
+        accountCookies = []
 
         if verification is True:
             email, emailPassword, token, emailID = lib.generateEmail(passw)
@@ -256,13 +257,17 @@ async def main():
                             bar.set_description(f"Verification email not found [{x + 1}/{executionCount}]")
                             bar.update(10)
 
+                except Exception as e:
+                    print(f"\nAn error occurred during email verification\n{e}\n")
+                    print(f"\nFailed to find email verification element. You may need to verify the account manually. Skipping and continuing...\n{e}\n")
+                finally:
                     bar.set_description(f"Saving cookies and clearing data [{x + 1}/{executionCount}]")
                     for i in page.cookies():
                         cookie = {
                             "name": i["name"],
                             "value": i["value"],
                         }
-                        cookies.append(cookie)
+                        accountCookies.append(cookie)
                     bar.update(5)
 
                     if customization is True:
@@ -278,39 +283,21 @@ async def main():
                     chrome.set.cookies.clear()
                     chrome.clear_cache()
                     chrome.quit()
-                    accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword})
-                    bar.set_description(f"Finished account generation [{x + 1}/{executionCount}]")
+                    accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword, "cookies": accountCookies})
+
+                    if 'e' in locals():
+                        bar.set_description(f"Finished account generation with errors [{x + 1}/{executionCount}]")
+                    else:
+                        bar.set_description(f"Finished account generation [{x + 1}/{executionCount}]")
                     bar.update(10)
                     bar.close()
-                except Exception as e:
-                    print(f"\nAn error occurred during email verification\n{e}\n")
-                    for i in page.cookies():
-                        cookie = {
-                            "name": i["name"],
-                            "value": i["value"],
-                        }
-                        cookies.append(cookie)
-                    if customization is True:
-                        bar.set_description(f"Attempt to customize account [{x + 1}/{executionCount}]")
-                        await lib.customization(page)
-                        bar.update(5)
-                    page.set.cookies.clear()
-                    page.clear_cache()
-                    chrome.set.cookies.clear()
-                    chrome.clear_cache()
-                    chrome.quit()
-                    accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword})
-                    bar.set_description(f"Finished account generation with errors [{x + 1}/{executionCount}]")
-                    bar.update(10)
-                    bar.close()
-                    print(f"\nFailed to find email verification element. You may need to verify the account manually. Skipping and continuing...\n{e}\n")
             else:
                 for i in page.cookies():
                     cookie = {
                         "name": i["name"],
                         "value": i["value"],
                     }
-                    cookies.append(cookie)
+                    accountCookies.append(cookie)
                 bar.update(10)
 
                 if customization is True:
@@ -328,7 +315,7 @@ async def main():
                 chrome.quit()
                 email = "N/A"
                 emailPassword = "N/A"
-                accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword})
+                accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword, "cookies": accountCookies})
                 bar.set_description(f"Finished account generation [{x + 1}/{executionCount}]")
                 bar.update(20)
                 bar.close()
@@ -355,19 +342,14 @@ async def main():
             "password": account["password"],
             "email": account["email"],
             "emailPassword": account["emailPassword"],
-            "cookies": []
+            "cookies": account["cookies"]
         }
-        for cookie in cookies:
-            accountData["cookies"].append({
-                "name": cookie["name"],
-                "value": cookie["value"]
-            })
         accountsData.append(accountData)
 
     existingData.extend(accountsData)
 
-    with open("cookies.json", "w") as json_file:
-        json.dump(existingData, json_file, indent=4)
+    with open("cookies.json", "w") as jsonFile:
+        json.dump(existingData, jsonFile, indent=4)
 
     for account in accounts:
         print(f"Username: {account['username']}, Password: {account['password']}, Email: {account['email']}, Email Password: {account['emailPassword']}")
@@ -378,11 +360,22 @@ async def main():
     ) or "n"
     if accountManagerFormat.lower() in ["y", "yes"]:
         accountManagerFormatString = ""
-        for account in accounts:
-            accountManagerFormatString += f"{account['username']}:{account['password']}\n"
+
+        for account in accountsData:
+            roblosecurityCookie = None
+            for cookie in account["cookies"]:
+                if cookie["name"] == ".ROBLOSECURITY":
+                    roblosecurityCookie = cookie["value"]
+                    break
+
+            if roblosecurityCookie:
+                accountManagerFormatString += f"{roblosecurityCookie}\n"
+            else:
+                print(f"Warning: No .ROBLOSECURITY cookie found for user {account.get('username', 'unknown')}")
+
         pyperclip.copy(accountManagerFormatString)
-        print("Account manager format copied to clipboard!")
-        print("Select the 'User:Pass' option in Roblox Account Manager and paste it into the input field.")
+        print("Account manager format (cookies) copied to clipboard!")
+        print("Select the 'Cookie(s)' option in Roblox Account Manager and paste it into the input field.")
         print("Do note that you'll have to complete the signup process manually in Roblox Account Manager.\n")
     else:
         print()
