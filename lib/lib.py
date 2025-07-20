@@ -334,7 +334,7 @@ class Main():
         else:
             gen = UsernameGenerator(10, 15)
             return gen.generate()
-        
+
     def followUser(self, user, tab):
         userIDList = []
         for x in user:
@@ -345,7 +345,7 @@ class Main():
                 tab.ele("@@class=MuiButtonBase-root MuiButton-root web-blox-css-tss-rjt6b6-Typography-buttonMedium MuiButton-outlined web-blox-css-tss-1as8hyo-Button-outlined MuiButton-outlinedSecondary MuiButton-sizeMedium MuiButton-outlinedSizeMedium MuiButton-root web-blox-css-tss-rjt6b6-Typography-buttonMedium MuiButton-outlined web-blox-css-tss-1as8hyo-Button-outlined MuiButton-outlinedSecondary MuiButton-sizeMedium MuiButton-outlinedSizeMedium web-blox-css-mui-1o6ewst-Typography-button@@id=friend-button@@type=button").click()
                 time.sleep(0.5)
             except Exception as e:
-                print(f"User {x} not found!")
+                print(f"User {x} not found! Error: {e}")
         return userIDList
 
 
