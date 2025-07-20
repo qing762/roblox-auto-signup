@@ -15,20 +15,21 @@ The process begins by utilizing the [Mail.tm](https://mail.tm/) service to obtai
 
 ## Features
 
-- Able to use any Chromium-based browser.
-- Able to use non authenticated proxy.
-- Be able to prompt to change to your own password instead of using the default one.
-- Password complexity checker for custom password.
-- Automatically checks if the username generated is taken or not. If yes, a new one would be generated.
-- Customizable username prefix.
+- Able to use any Chromium-based browser
+- Able to use non authenticated proxy
+- Be able to prompt to change to your own password instead of using the default one
+- Password complexity checker for custom password
+- Automatically checks if the username generated is taken or not. If yes, a new one would be generated
+- Customizable username prefix
+- Friends adding functionality
 - Able to randomly customize the account avatar (Clothes, Body size, etc)
-- Error handling.
+- Error handling
 - Compatible with [Roblox Account Manager](https://github.com/ic3w0lf22/Roblox-Account-Manager)
 - Structured username format
-- Update checker functionality.
-- The script does all the job by itself.
-- No webdriver required.
-- Fast execution time.
+- Update checker functionality
+- The script does all the job by itself
+- No webdriver required
+- Fast execution time
 
 > **Warning**
 > The script does not solves FunCaptcha from Roblox, I haven't found an efficient way to do so. For now, you have to solve it by yourself.

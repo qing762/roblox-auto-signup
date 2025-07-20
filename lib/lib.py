@@ -177,14 +177,14 @@ class Main():
             return f"\nPassword does not meet the requirements: {resp['message']}"
 
     async def customization(self, tab):
-        tab.listen.start('https://avatar.roblox.com/v1/recent-items/all/list')
+        tab.listen.start('https://avatar.roblox.com/v1/avatar-inventory?pageLimit=50&sortOption=recentAdded')
         tab.get("https://www.roblox.com/my/avatar")
-        result = tab.listen.wait()
+        result = tab.listen.wait(timeout=10)
         content = result.response.body
         assetDict = {}
-        for item in content['data']:
-            if 'assetType' in item:
-                assetType = item["assetType"]["name"]
+        for item in content['avatarInventoryItems']:
+            if 'itemCategory' in item:
+                assetType = item["itemCategory"]["itemSubType"]
                 if assetType not in assetDict:
                     assetDict[assetType] = []
                 assetDict[assetType].append(item)
@@ -196,7 +196,7 @@ class Main():
 
         for assetType, asset in selectedAssets.items():
             for z in tab.ele(".hlist item-cards-stackable").eles("tag:li"):
-                if z.ele("tag:a").attr("data-item-name") == asset["name"]:
+                if z.ele("tag:a").attr("data-item-name") == asset["itemName"]:
                     z.ele("tag:a").click()
                     break
 
@@ -334,6 +334,19 @@ class Main():
         else:
             gen = UsernameGenerator(10, 15)
             return gen.generate()
+        
+    def followUser(self, user, tab):
+        userIDList = []
+        for x in user:
+            try:
+                userID = requests.post("https://users.roblox.com/v1/usernames/users", json={"usernames": [x]}).json()["data"][0]["id"]
+                url = f"https://www.roblox.com/users/{userID}/profile"
+                tab.get(url)
+                tab.ele("@@class=MuiButtonBase-root MuiButton-root web-blox-css-tss-rjt6b6-Typography-buttonMedium MuiButton-outlined web-blox-css-tss-1as8hyo-Button-outlined MuiButton-outlinedSecondary MuiButton-sizeMedium MuiButton-outlinedSizeMedium MuiButton-root web-blox-css-tss-rjt6b6-Typography-buttonMedium MuiButton-outlined web-blox-css-tss-1as8hyo-Button-outlined MuiButton-outlinedSecondary MuiButton-sizeMedium MuiButton-outlinedSizeMedium web-blox-css-mui-1o6ewst-Typography-button@@id=friend-button@@type=button").click()
+                time.sleep(0.5)
+            except Exception as e:
+                print(f"User {x} not found!")
+        return userIDList
 
 
 if __name__ == "__main__":

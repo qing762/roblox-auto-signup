@@ -108,6 +108,13 @@ async def main():
         else:
             print("\nPlease enter a valid option.")
 
+    followUser = input(
+        "\nWould you like to follow any additional accounts after generating this account?\n"
+        "If yes, enter the usernames separated by commas (,).\n"
+        "Leave blank if none.\n"
+        "Usernames: "
+    )
+
     proxyUsage = input(
         "\nWould you like to use a proxy?\nPlease enter the proxy IP and port in the format of IP:PORT (Example: http://localhost:1080). Press enter to skip.\nProxy: "
     )
@@ -144,6 +151,11 @@ async def main():
     else:
         customization = False
 
+    if followUser != "":
+        following = True
+        followUserList = followUser.split(",")
+        followUserList = [user.strip() for user in followUserList] 
+    
     if verification.lower() == "y" or verification == "":
         verification = True
     else:
@@ -225,7 +237,7 @@ async def main():
                     page.ele(".btn-primary-md btn-primary-md btn-min-width").click()
                     if page.ele("@@class=phone-verification-nonpublic-text text-description font-caption-body"):
                         print("Found phone verification element, skipping email verification.\n")
-                        bar.update(40)
+                        bar.update(20)
                         bar.set_description(f"Skipping email verification [{x + 1}/{executionCount}]")
                     elif page.ele(". form-control input-field verification-upsell-modal-input"):
                         page.ele(". form-control input-field verification-upsell-modal-input").input(email)
@@ -278,6 +290,14 @@ async def main():
                         bar.set_description(f"Skipping customization [{x + 1}/{executionCount}]")
                         bar.update(5)
 
+                    if following is True:
+                        bar.set_description(f"Following users [{x + 1}/{executionCount}]")
+                        try:
+                            userIDs = lib.followUser(followUserList, page)
+                        except Exception as e:
+                            print(f"An error occurred while following users: {e}")
+                        bar.update(5)
+
                     page.set.cookies.clear()
                     page.clear_cache()
                     chrome.set.cookies.clear()
@@ -289,7 +309,7 @@ async def main():
                         bar.set_description(f"Finished account generation with errors [{x + 1}/{executionCount}]")
                     else:
                         bar.set_description(f"Finished account generation [{x + 1}/{executionCount}]")
-                    bar.update(10)
+                    bar.update(100 - bar.n)
                     bar.close()
             else:
                 for i in page.cookies():
@@ -303,10 +323,18 @@ async def main():
                 if customization is True:
                     bar.set_description(f"Customizing account [{x + 1}/{executionCount}]")
                     await lib.customization(page)
-                    bar.update(20)
+                    bar.update(15)
                 else:
                     bar.set_description(f"Skipping customization [{x + 1}/{executionCount}]")
-                    bar.update(20)
+                    bar.update(15)
+
+                if following is True:
+                    bar.set_description(f"Following users [{x + 1}/{executionCount}]")
+                    try:
+                        userIDs = lib.followUser(followUserList, page)
+                    except Exception as e:
+                        print(f"An error occurred while following users: {e}")
+                    bar.update(10)
 
                 page.set.cookies.clear()
                 page.clear_cache()
@@ -317,7 +345,7 @@ async def main():
                 emailPassword = "N/A"
                 accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword, "cookies": accountCookies})
                 bar.set_description(f"Finished account generation [{x + 1}/{executionCount}]")
-                bar.update(20)
+                bar.update(100 - bar.n)
                 bar.close()
 
     with open("accounts.txt", "a") as f:
