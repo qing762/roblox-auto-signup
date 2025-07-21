@@ -155,6 +155,8 @@ async def main():
         following = True
         followUserList = followUser.split(",")
         followUserList = [user.strip() for user in followUserList]
+    else:
+        following = False
 
     if verification.lower() == "y" or verification == "":
         verification = True
