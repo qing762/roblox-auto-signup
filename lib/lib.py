@@ -6,6 +6,7 @@ import time
 import hmac
 import os
 import hashlib
+from DrissionPage import errors
 from pymailtm import MailTm, Account
 
 
@@ -201,8 +202,42 @@ class Main():
                     break
 
         bodyType = random.choice([i for i in range(0, 101, 5)])
-        tab.run_js_loaded(f'document.getElementById("body type-scale").value = {bodyType};')
-        tab.run_js_loaded('document.getElementById("body type-scale").dispatchEvent(new Event("input"));')
+        try:
+            tab.run_js_loaded(f'document.getElementById("body type-scale").value = {bodyType};')
+            tab.run_js_loaded('document.getElementById("body type-scale").dispatchEvent(new Event("input"));')
+        except errors.JavaScriptError:
+            tab.run_js_loaded(f'''
+                var slider = document.querySelector('input[aria-label="Body Type Scale"]');
+                if (slider) {{
+                    var muiSlider = slider.closest('.MuiSlider-root');
+                    var rect = muiSlider.getBoundingClientRect();
+                    var targetValue = {bodyType};
+                    var percentage = targetValue / 100;
+                    var targetX = rect.left + (rect.width * percentage);
+                    var targetY = rect.top + (rect.height / 2);
+
+                    muiSlider.dispatchEvent(new MouseEvent('mousedown', {{
+                        bubbles: true,
+                        clientX: targetX,
+                        clientY: targetY,
+                        button: 0
+                    }}));
+
+                    var nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+                    nativeInputValueSetter.call(slider, targetValue);
+
+                    slider.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                    slider.dispatchEvent(new Event('change', {{ bubbles: true }}));
+
+                    muiSlider.dispatchEvent(new MouseEvent('mouseup', {{
+                        bubbles: true,
+                        clientX: targetX,
+                        clientY: targetY,
+                        button: 0
+                    }}));
+                }}
+            ''')
+            time.sleep(2)
 
     def testProxy(self, proxy):
         try:
@@ -342,7 +377,8 @@ class Main():
                 userID = requests.post("https://users.roblox.com/v1/usernames/users", json={"usernames": [x]}).json()["data"][0]["id"]
                 url = f"https://www.roblox.com/users/{userID}/profile"
                 tab.get(url)
-                tab.ele("@@class=MuiButtonBase-root MuiButton-root web-blox-css-tss-rjt6b6-Typography-buttonMedium MuiButton-outlined web-blox-css-tss-1as8hyo-Button-outlined MuiButton-outlinedSecondary MuiButton-sizeMedium MuiButton-outlinedSizeMedium MuiButton-root web-blox-css-tss-rjt6b6-Typography-buttonMedium MuiButton-outlined web-blox-css-tss-1as8hyo-Button-outlined MuiButton-outlinedSecondary MuiButton-sizeMedium MuiButton-outlinedSizeMedium web-blox-css-mui-1o6ewst-Typography-button@@id=friend-button@@type=button").click()
+                tab.ele("@class=MuiButtonBase-root MuiIconButton-root web-blox-css-tss-abxp79-IconButton-root profile-header-dropdown MuiIconButton-sizeMedium web-blox-css-mui-3cliw1").click()
+                tab.ele("@@class=MuiButtonBase-root MuiMenuItem-root web-blox-css-tss-1uppt56-MenuItem-root MuiMenuItem-gutters MuiMenuItem-root web-blox-css-tss-1uppt56-MenuItem-root MuiMenuItem-gutters web-blox-css-mui-1bwf1ry-Typography-body1@@id=follow-button").click()
                 time.sleep(0.5)
             except Exception as e:
                 print(f"User {x} not found! Error: {e}")
