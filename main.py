@@ -6,6 +6,7 @@ import os
 import sys
 import re
 import pyperclip
+import random
 from datetime import datetime
 from DrissionPage import Chromium, ChromiumOptions, errors
 from tqdm import TqdmExperimentalWarning
@@ -116,7 +117,10 @@ async def main():
     )
 
     proxyUsage = input(
-        "\nWould you like to use a proxy?\nPlease enter the proxy IP and port in the format of IP:PORT (Example: http://localhost:1080). Press enter to skip.\nProxy: "
+        "\nWould you like to use proxies?\n"
+        "If yes, please enter the proxy IP and port in the format of IP:PORT separated by commas (,). (Example: http://localhost:1080).\n"
+        "Leave blank if none.\n"
+        "Proxy: "
     )
 
     while True:
@@ -163,16 +167,20 @@ async def main():
     else:
         verification = False
 
-    if proxyUsage != "":
-        if lib.testProxy(proxyUsage)[0] is True:
-            co.set_proxy(proxyUsage)
-        else:
-            print(lib.testProxy(proxyUsage)[1])
-
     if incognitoUsage.lower() == "y" or incognitoUsage == "":
         co.incognito()
 
     for x in range(int(executionCount)):
+        if proxyUsage != "":
+            proxyList = [proxy.strip() for proxy in proxyUsage.split(",")]
+            random.shuffle(proxyList)
+            for proxy in proxyList:
+                if lib.testProxy(proxy)[0] is True:
+                    co.set_proxy(proxy)
+                    break
+                else:
+                    print(lib.testProxy(proxy)[1])
+
         if "--no-analytics" not in sys.argv:
             lib.checkAnalytics(version)
         if nameFormat:
