@@ -253,12 +253,12 @@ async def main():
                 print(f"\nAn error occurred\n{e}\n")
             if not captchaPresence:
                 if lang == "en":
-                    page.wait.url_change("https://www.roblox.com/home", timeout=float("inf"))
+                    page.wait.url_change("https://www.roblox.com/home", timeout=int("10"))
                 else:
                     try:
-                        page.wait.url_change(f"https://www.roblox.com/{lang}/home", timeout=float("inf"))
+                        page.wait.url_change("https://www.roblox.com/home", timeout=int("10"))
                     except errors.TimeoutError:
-                        page.wait.url_change("https://www.roblox.com/home", timeout=float("inf"))
+                        page.wait.url_change(f"https://www.roblox.com/{lang}/home", timeout=int("10"))
                 bar.set_description(f"Signup process [{x + 1}/{executionCount}]")
                 bar.update(20)
 
