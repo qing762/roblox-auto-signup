@@ -1,0 +1,8 @@
+<assembly
+  xmlns='urn:schemas-microsoft-com:asm.v1' manifestVersion='1.0'>
+  <assemblyIdentity
+      name='136.0.7103.113'
+      version='136.0.7103.113'
+      type='win32'/>
+  <file name='chrome_elf.dll'/>
+</assembly>

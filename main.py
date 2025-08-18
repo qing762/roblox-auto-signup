@@ -11,7 +11,7 @@ from datetime import datetime
 from DrissionPage import Chromium, ChromiumOptions, errors
 from tqdm import TqdmExperimentalWarning
 from tqdm.rich import tqdm
-from lib.lib import Main
+from lib.lib import Main, getResourcePath
 
 
 warnings.filterwarnings("ignore", category=TqdmExperimentalWarning)
@@ -34,6 +34,7 @@ async def main():
             "\n(RECOMMENDED) Press enter in order to use the default browser path (If you have Chrome installed)"
             "\033[0m"
             "\nIf you prefer to use other Chromium browser other than Chrome, please enter its executable path here. (e.g: C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe)"
+            "\nNote that if captcha bypass is chosen, it will be using Ungoogled Chromium which is already included."
             "\nHere are some supported browsers that are tested and able to use:"
             "\n- Chrome Browser"
             "\n- Brave Browser"
@@ -123,9 +124,17 @@ async def main():
         "Proxy: "
     )
 
+    captchaBypass = input(
+        "\nWould you like to bypass captcha through NopeCHA? (Note that there's only up to 100 free solves per day)"
+        "\nYou can get a free API key from https://nopecha.com/manage and paste it here."
+        "\nIf yes, please enter the API key for the service."
+        "\nLeave blank if none."
+        "\nAPI Key: "
+    )
+
     while True:
         incognitoUsage = input(
-            "\nWould you like to use incognito mode? [y/n] (Default: Yes): "
+            "\nWould you like to use incognito mode? Note that if captcha bypass is chosen, it will not be using incognito mode automatically. [y/n] (Default: Yes): "
         )
         if incognitoUsage.lower() in ["y", "n", ""]:
             break
@@ -167,8 +176,12 @@ async def main():
     else:
         verification = False
 
-    if incognitoUsage.lower() == "y" or incognitoUsage == "":
+    if incognitoUsage.lower() == "y" or incognitoUsage == "" and captchaBypass == "":
         co.incognito()
+
+    if captchaBypass != "":
+        co.add_extension(getResourcePath("lib/NopeCHA"))
+        co.set_browser_path(getResourcePath("lib/ungoogled-chromium_136.0.7103.113-1.1_windows_x64/chrome.exe"))
 
     proxyList = [proxy.strip() for proxy in proxyUsage.split(",")]
     usableProxies = []
@@ -212,6 +225,8 @@ async def main():
                 bar.update(10)
 
             try:
+                if captchaBypass != "":
+                    page.get(f"https://nopecha.com/setup#{captchaBypass}")
                 page.get("https://www.roblox.com/CreateAccount")
                 lang = page.run_js_loaded("return window.navigator.userLanguage || window.navigator.language").split("-")[0]
                 try:
@@ -238,7 +253,7 @@ async def main():
 
                 try:
                     captcha = page.get_frame('xpath://*[@id="arkose-iframe"]')
-                    if captcha and proxyNumber >= 2:
+                    if captcha and proxyNumber >= 2 and captchaBypass != "":
                         print(f"Captcha detected for account {x + 1}, retrying...")
                         bar.close()
                         chrome.quit()

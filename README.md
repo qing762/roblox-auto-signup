@@ -4,7 +4,7 @@
 > [!WARNING]
 > Please be advised that usage of this tool is entirely at your own risk. I assumes no responsibility for any adverse consequences that may arise from its use, and users are encouraged to exercise caution and exercise their own judgment in utilizing this tool.
 
-# Roblox auto signup
+# Roblox Auto Signup
 
 A tool that auto fetch a temporary email address and creates an account at https://roblox.com/.
 
@@ -24,6 +24,8 @@ The process begins by utilizing the [Mail.tm](https://mail.tm/) service to obtai
 - Friends adding functionality
 - Able to randomly customize the account avatar (Clothes, Body size, etc)
 - Error handling
+- Integration with [NopeCHA](https://nopecha.com/) to solve captcha automatically
+- Built in [Ungoogle Chromium (Windows)](https://github.com/ungoogled-software/ungoogled-chromium)
 - Compatible with [Roblox Account Manager](https://github.com/ic3w0lf22/Roblox-Account-Manager)
 - Structured username format
 - Update checker functionality
@@ -31,8 +33,13 @@ The process begins by utilizing the [Mail.tm](https://mail.tm/) service to obtai
 - No webdriver required
 - Fast execution time
 
-> **Warning**
-> The script does not solves FunCaptcha from Roblox, I haven't found an efficient way to do so. For now, you have to solve it by yourself.
+
+> [!NOTE]
+> Extension loading (NopeCHA) can only by used on Chrome version 136 and below. As such, Ungoogled Chromium with version 136.0.7103.113 (Windows) is installed as a workaround.  As such, you might see a significant increase in folder size due to the presence of the browser.
+
+> [!WARNING]
+> For Mac / Linux users, you can find Ungoogle Chromium for your OS [here](https://ungoogled-software.github.io/ungoogled-chromium-binaries/releases/). Be sure to install version that is v136 and below.
+
 
 ## Installation / Usage
 
