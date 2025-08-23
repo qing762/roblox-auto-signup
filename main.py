@@ -125,7 +125,7 @@ async def main():
     )
 
     captchaBypass = input(
-        "\nWould you like to bypass captcha through NopeCHA? (Note that there's only up to 100 free solves per day)"
+        "\nWould you like to bypass captcha through NopeCHA? (Note that there's only up to 200 free solves per day)"
         "\nYou can get a free API key from https://nopecha.com/manage and paste it here."
         "\nIf yes, please enter the API key for the service."
         "\nLeave blank if none."
@@ -267,13 +267,21 @@ async def main():
             except Exception as e:
                 print(f"\nAn error occurred\n{e}\n")
             if not captchaPresence:
-                if lang == "en":
+                if lang == "en" and captchaBypass == "":
                     page.wait.url_change("https://www.roblox.com/home", timeout=int("10"))
+                elif lang == "en" and captchaBypass != "":
+                    page.wait.url_change("https://www.roblox.com/home", timeout=float("inf"))
                 else:
                     try:
-                        page.wait.url_change("https://www.roblox.com/home", timeout=int("10"))
+                        if captchaBypass == "":
+                            page.wait.url_change("https://www.roblox.com/home", timeout=int("10"))
+                        elif captchaBypass != "":
+                            page.wait.url_change("https://www.roblox.com/home", timeout=float("inf"))
                     except errors.TimeoutError:
-                        page.wait.url_change(f"https://www.roblox.com/{lang}/home", timeout=int("10"))
+                        if captchaBypass == "":
+                            page.wait.url_change("https://www.roblox.com/home", timeout=int("10"))
+                        elif captchaBypass != "":
+                            page.wait.url_change(f"https://www.roblox.com/{lang}/home", timeout=float("inf"))
                 bar.set_description(f"Signup process [{x + 1}/{executionCount}]")
                 bar.update(20)
 

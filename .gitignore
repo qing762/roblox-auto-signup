@@ -12,6 +12,7 @@ assignVer.py
 *.spec
 version.py
 /downloaded_files
+test.py
 temp.py
 testFile.bat
 analytics.txt
