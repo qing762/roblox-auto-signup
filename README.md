@@ -25,7 +25,7 @@ The process begins by utilizing the [Mail.tm](https://mail.tm/) service to obtai
 - Able to randomly customize the account avatar (Clothes, Body size, etc)
 - Error handling
 - Integration with [NopeCHA](https://nopecha.com/) to solve captcha automatically
-- Built in [Ungoogle Chromium (Windows)](https://github.com/ungoogled-software/ungoogled-chromium)
+- Built in [Ungoogle Chromium (Windows)](https://github.com/ungoogled-software/ungoogled-chromium) installer
 - Compatible with [Roblox Account Manager](https://github.com/ic3w0lf22/Roblox-Account-Manager)
 - Structured username format
 - Update checker functionality

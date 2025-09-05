@@ -1,4 +1,5 @@
 import random
+import platform
 import requests
 import sys
 import uuid
@@ -6,7 +7,8 @@ import time
 import hmac
 import os
 import hashlib
-from DrissionPage import errors
+from DrissionPage import errors, SessionPage
+from zipfile import ZipFile
 from pymailtm import MailTm, Account
 
 
@@ -109,6 +111,75 @@ class UsernameGenerator:
 
 
 class Main():
+    def downloadUngoogledChromium(self):
+        system = platform.system()
+        page = SessionPage()
+        versions = []
+        if system == "Windows":
+            page.get("https://ungoogled-software.github.io/ungoogled-chromium-binaries/releases/windows/64bit/")
+            for x in page.eles("@tag()=li"):
+                versionText = x.ele("@tag()=a").text
+                versions.append(versionText)
+        else:
+            print(f"{system} OS is not supported for automated installation yet. Please make sure Ungoogled Chromium is installed in order to use NopeCHA.")
+            return
+        versions = list(filter(lambda ver: int(ver.split(".")[0]) <= 136, versions))
+        if not versions:
+            return "No compatible versions found."
+        if system == "Windows":
+            unGoogledChromium = f"./lib/ungoogled-chromium_{versions[0]}.1_windows_x64"
+            if os.path.exists(unGoogledChromium):
+                return
+        prompt = input("Would you like to install Ungoogled Chromium for NopeCHA to work? [y/n] (Default: Yes): ")
+        if prompt.lower() == "y" or prompt == "" or prompt == "yes":
+            if system == "Windows":
+                if not os.path.exists(f"{unGoogledChromium}.zip"):
+                    print(f"Downloading Ungoogled Chromium version {versions[0]} for Windows...")
+                    print("This may take a while, please be patient.... Please do not close the program/terminal.")
+                    try:
+                        url = f"https://github.com/ungoogled-software/ungoogled-chromium-windows/releases/download/{versions[0]}.1/ungoogled-chromium_{versions[0]}.1_windows_x64.zip"
+                        r = requests.get(url, stream=True)
+                        r.raise_for_status()
+                        with open(f"{unGoogledChromium}.zip", "wb") as file:
+                            for chunk in r.iter_content(chunk_size=1024):
+                                if chunk:
+                                    file.write(chunk)
+                        print("Download complete. Proceeding to extract the zip file...")
+                    except requests.exceptions.RequestException as e:
+                        return f"Download failed: {e}"
+                    except PermissionError as e:
+                        return f"Permission error: {e}. Please check file permissions or run with administrator privileges."
+                    except IOError as e:
+                        return f"File I/O error: {e}"
+                else:
+                    print("Zip file already exists. Proceeding to extract...")
+                with ZipFile(f"{unGoogledChromium}.zip", 'r') as browserObject:
+                    browserObject.extractall(unGoogledChromium)
+                print("Extraction complete. Deleting zip file...")
+                os.remove(f"{unGoogledChromium}.zip")
+                return "Ungoogled Chromium has been downloaded successfully."
+        else:
+            return "Download cancelled by user."
+
+    def returnUngoogledChromiumPath(self):
+        system = platform.system()
+        page = SessionPage()
+        versions = []
+        if system == "Windows":
+            page.get("https://ungoogled-software.github.io/ungoogled-chromium-binaries/releases/windows/64bit/")
+            for x in page.eles("@tag()=li"):
+                versionText = x.ele("@tag()=a").text
+                versions.append(versionText)
+            versions = list(filter(lambda ver: int(ver.split(".")[0]) <= 136, versions))
+            if not versions:
+                print("No compatible versions found.")
+                return
+            if system == "Windows":
+                unGoogledChromium = f"./lib/ungoogled-chromium_{versions[0]}.1_windows_x64"
+                return unGoogledChromium
+        else:
+            return None
+
     def usernameCreator(self, nameFormat=None, scrambled=False):
         counter = 0
         while True:

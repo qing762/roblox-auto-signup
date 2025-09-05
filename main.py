@@ -27,27 +27,67 @@ async def main():
     version = await lib.checkUpdate()
 
     lib.promptAnalytics()
+    print()
+    lib.downloadUngoogledChromium()
 
     while True:
-        browserPath = input(
-            "\033[1m"
-            "\n(RECOMMENDED) Press enter in order to use the default browser path (If you have Chrome installed)"
-            "\033[0m"
-            "\nIf you prefer to use other Chromium browser other than Chrome, please enter its executable path here. (e.g: C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe)"
-            "\nNote that if captcha bypass is chosen, it will be using Ungoogled Chromium which is already included."
-            "\nHere are some supported browsers that are tested and able to use:"
-            "\n- Chrome Browser"
-            "\n- Brave Browser"
-            "\nBrowser executable path: "
-        ).replace('"', "").replace("'", "")
-        if browserPath != "":
-            if os.path.exists(browserPath):
-                co.set_browser_path(browserPath)
-                break
+        try:
+            browserPath = lib.returnUngoogledChromiumPath()
+        except Exception as e:
+            print(f"An error occurred while checking for Ungoogled Chromium: {e}")
+            browserPath = None
+        if browserPath is None:
+            browserPath = input(
+                "\033[1m"
+                "\n(RECOMMENDED) Press enter in order to use the default browser path (If you have Chrome installed)"
+                "\033[0m"
+                "\nIf you prefer to use other Chromium browser other than Chrome, please enter its executable path here. (e.g: C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe)"
+                "\nNote that if captcha bypass is chosen, it will be using Ungoogled Chromium which is already included."
+                "\nHere are some supported browsers that are tested and able to use:"
+                "\n- Chrome Browser"
+                "\n- Brave Browser"
+                "\n- Ungoogled Chromium"
+                "\nBrowser executable path: "
+            ).replace('"', "").replace("'", "")
+            if browserPath != "":
+                if os.path.exists(browserPath):
+                    co.set_browser_path(browserPath)
+                    break
+                else:
+                    print("Please enter a valid path.")
             else:
-                print("Please enter a valid path.")
+                break
         else:
-            break
+            ungoogledChromiumUsage = input(
+                "Ungoogled Chromium is detected in the lib folder, would you like to use it? [y/n] (Default: Yes): "
+            )
+            if ungoogledChromiumUsage.lower() in ["y", "n", ""]:
+                if ungoogledChromiumUsage.lower() == "y" or ungoogledChromiumUsage == "":
+                    co.set_browser_path(lib.returnUngoogledChromiumPath())
+                    break
+                else:
+                    browserPath = input(
+                        "\033[1m"
+                        "\n(RECOMMENDED) Press enter in order to use the default browser path (If you have Chrome installed)"
+                        "\033[0m"
+                        "\nIf you prefer to use other Chromium browser other than Chrome, please enter its executable path here. (e.g: C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe)"
+                        "\nNote that if captcha bypass is chosen, it will be using Ungoogled Chromium which is already included."
+                        "\nHere are some supported browsers that are tested and able to use:"
+                        "\n- Chrome Browser"
+                        "\n- Brave Browser"
+                        "\n- Ungoogled Chromium"
+                        "\nBrowser executable path: "
+                    ).replace('"', "").replace("'", "")
+                    if browserPath != "":
+                        if os.path.exists(browserPath):
+                            co.set_browser_path(browserPath)
+                            break
+                        else:
+                            print("Please enter a valid path.")
+                    else:
+                        break
+            else:
+                print("\nPlease enter a valid option.")
 
     while True:
         passw = (
@@ -246,6 +286,11 @@ async def main():
                 page.ele("#YearDropdown").select.by_value(str(currentYear))
                 page.ele("#signup-username").input(username)
                 page.ele("#signup-password").input(passw)
+                time.sleep(2)
+                try:
+                    page.ele('@@id=signup-checkbox@@class=checkbox').click()
+                except errors.ElementNotFoundError:
+                    pass
                 time.sleep(1)
                 page.ele("@@id=signup-button@@name=signupSubmit@@class=btn-primary-md signup-submit-button btn-full-width").click()
                 bar.set_description(f"Signup submitted [{x + 1}/{executionCount}]")
