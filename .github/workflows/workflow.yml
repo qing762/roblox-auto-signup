@@ -76,7 +76,7 @@ jobs:
       - name: Build executable
         run: |
           echo "__version__ = '${{ steps.get_version.outputs.VERSION }}'" > version.py
-          pyinstaller --onefile --clean --add-data "version.py:." --add-data "lib/adjectives.txt:lib" --add-data "lib/nouns.txt:lib" --add-data "lib/verbs.txt:lib" --add-data "lib/NopeCHA:lib/NopeCHA" --add-data "lib/ungoogled-chromium_136.0.7103.113-1.1_windows_x64:lib/ungoogled-chromium_136.0.7103.113-1.1_windows_x64" --add-data "$(python -c "import random_username, os; print(os.path.join(os.path.dirname(random_username.__file__), 'data'))")${{ runner.os == 'Windows' && ';' || ':' }}random_username/data" --name "roblox-auto-signup ${{ steps.get_version.outputs.VERSION }}.exe" main.py
+          pyinstaller --onefile --clean --add-data "version.py:." --add-data "lib/adjectives.txt:lib" --add-data "lib/nouns.txt:lib" --add-data "lib/verbs.txt:lib" --add-data "lib/NopeCHA:lib/NopeCHA" --add-data "$(python -c "import random_username, os; print(os.path.join(os.path.dirname(random_username.__file__), 'data'))")${{ runner.os == 'Windows' && ';' || ':' }}random_username/data" --name "roblox-auto-signup ${{ steps.get_version.outputs.VERSION }}.exe" main.py
 
       - name: Upload Executable
         uses: actions/upload-artifact@v4
