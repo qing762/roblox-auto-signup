@@ -3,11 +3,11 @@ import platform
 import requests
 import sys
 import uuid
-import time
 import hmac
 import os
 import hashlib
-import re  # BUG FIX: Add re import for proxy validation
+import re
+import asyncio
 from DrissionPage import errors, SessionPage
 from zipfile import ZipFile
 from pymailtm import MailTm, Account
@@ -49,7 +49,7 @@ class UsernameGenerator:
         else:
             is_consonant = False
 
-        length = random.randrange(self.min_length, self.max_length+1)
+        length = random.randrange(self.min_length, self.max_length + 1)
 
         if random.randrange(5) == 0:
             num_length = random.randrange(3) + 1
@@ -57,15 +57,15 @@ class UsernameGenerator:
                 num_length = 0
 
         # Ensure we have a positive range for username generation
-        letter_length = max(1, length - num_length)
-        for j in range(letter_length):
+        letterLength = max(1, length - num_length)
+        for j in range(letterLength):
             if len(username) > 0:
                 if username[-1] in self.CONSONANTS:
                     is_consonant = False
                 elif username[-1] in self.VOWELS:  # BUG FIX: was checking CONSONANTS twice
                     is_consonant = True
             if not is_double:
-                if random.randrange(8) == 0 and len(username) < int(letter_length) - 1:
+                if random.randrange(8) == 0 and len(username) < int(letterLength) - 1:
                     is_double = True
                 if is_consonant:
                     username += self._get_consonant(is_double)
@@ -153,7 +153,7 @@ class Main():
                                     if chunk:
                                         file.write(chunk)
                         finally:
-                            r.close()  # BUG FIX: Explicitly close the response to free resources
+                            r.close()
                         print("Download complete. Proceeding to extract the zip file...")
                     except requests.exceptions.RequestException as e:
                         return f"Download failed: {e}"
@@ -170,10 +170,10 @@ class Main():
                     os.remove(f"{unGoogledChromium}.zip")
                     return "Ungoogled Chromium has been downloaded successfully."
                 except Exception as e:
-                    # BUG FIX: Clean up zip file even if extraction fails
+                    # Clean up zip file even if extraction fails
                     try:
                         os.remove(f"{unGoogledChromium}.zip")
-                    except Exception:  # BUG FIX: Specify Exception instead of bare except
+                    except Exception:
                         pass  # If cleanup fails, continue anyway
                     return f"Extraction failed: {e}"
         else:
@@ -203,9 +203,9 @@ class Main():
 
     def usernameCreator(self, nameFormat=None, scrambled=False):
         counter = 0
-        max_attempts = 100  # Prevent infinite loops
-        
-        for attempt in range(max_attempts):
+        maxAttempts = 100  # Prevent infinite loops
+
+        for attempt in range(maxAttempts):
             try:
                 if nameFormat:
                     username = f"{nameFormat}_{counter}"
@@ -225,20 +225,20 @@ class Main():
                     print(f"Error validating username {username}: {e}")
                     continue
 
-                if r.get("code") == 0:  # BUG FIX: Use .get() for safer dictionary access
+                if r.get("code") == 0:
                     return username
                 else:
-                    if nameFormat and attempt >= max_attempts - 1:
+                    if nameFormat and attempt >= maxAttempts - 1:
                         # If using nameFormat and we've tried many times, just use a random username
                         return self.generateUsername(scrambled=True)
                     continue
             except Exception as e:
                 print(f"Error validating username: {e}")
-                if attempt >= max_attempts - 1:
+                if attempt >= maxAttempts - 1:
                     # Fallback to a random username
                     return self.generateUsername(scrambled=True)
                 continue
-                
+
         # If we reach here, fallback to a random username
         return self.generateUsername(scrambled=True)
 
@@ -250,7 +250,7 @@ class Main():
             )
             resp.raise_for_status()
             response_data = resp.json()
-            latestVer = response_data.get("tag_name", "unknown")  # BUG FIX: Use .get() for safer access
+            latestVer = response_data.get("tag_name", "unknown")
 
             if getattr(sys, 'frozen', False):
                 try:
@@ -260,7 +260,7 @@ class Main():
                     currentVer = "unknown"
             else:
                 try:
-                    with open("version.txt", "r", encoding="utf-8") as file:  # BUG FIX: Add encoding
+                    with open("version.txt", "r", encoding="utf-8") as file:
                         currentVer = file.read().strip()
                 except FileNotFoundError:
                     currentVer = "unknown"
@@ -300,7 +300,7 @@ class Main():
             }
             try:
                 resp = requests.post("https://auth.roblox.com/v2/passwords/validate", json=data, headers=headers, timeout=10).json()
-                if resp.get("code") == 0:  # BUG FIX: Use .get() for safer access
+                if resp.get("code") == 0:
                     return "\nPassword is valid"
                 else:
                     return f"\nPassword does not meet the requirements: {resp.get('message', 'Unknown error')}"
@@ -316,8 +316,8 @@ class Main():
             result = tab.listen.wait(timeout=10)
             content = result.response.body
             assetDict = {}
-            for item in content.get('avatarInventoryItems', []):  # BUG FIX: Use .get() for safer access
-                if 'itemCategory' in item and 'itemSubType' in item['itemCategory']:  # BUG FIX: Check nested key exists
+            for item in content.get('avatarInventoryItems', []):
+                if 'itemCategory' in item and 'itemSubType' in item['itemCategory']:
                     assetType = item["itemCategory"]["itemSubType"]
                     if assetType not in assetDict:
                         assetDict[assetType] = []
@@ -331,7 +331,7 @@ class Main():
             for assetType, asset in selectedAssets.items():
                 try:
                     for z in tab.ele(".hlist item-cards-stackable").eles("tag:li"):
-                        if z.ele("tag:a").attr("data-item-name") == asset.get("itemName"):  # BUG FIX: Use .get() for safer access
+                        if z.ele("tag:a").attr("data-item-name") == asset.get("itemName"):
                             z.ele("tag:a").click()
                             break
                 except Exception as e:
@@ -376,17 +376,16 @@ class Main():
                     }}));
                 }}
             ''')
-            import asyncio
-            await asyncio.sleep(2)  # BUG FIX: Use asyncio.sleep instead of time.sleep in async function
+            await asyncio.sleep(2)
 
     def testProxy(self, proxy):
         if not proxy or not proxy.strip():
             return False, "Empty proxy provided"
-        
+
         try:
-            # BUG FIX: Better proxy format validation
+
             proxy = proxy.strip()
-            
+
             # Validate proxy format more strictly
             if not proxy.startswith(('http://', 'https://', 'socks4://', 'socks5://')):
                 # Only auto-add http:// for IP:PORT format
@@ -394,11 +393,11 @@ class Main():
                     proxy = "http://" + proxy
                 else:
                     return False, f"Invalid proxy format: {proxy}. Expected format: protocol://host:port or IP:PORT"
-            
+
             # Additional security check for dangerous characters
             if any(char in proxy for char in ['&', '|', ';', '$', '`', '(', ')', '<', '>']):
                 return False, f"Proxy contains invalid characters: {proxy}"
-                
+
             response = requests.get("http://www.google.com", proxies={"http": proxy, "https": proxy}, timeout=10)
             if response.status_code == 200:
                 return True, f"Proxy {proxy} is working"
@@ -411,21 +410,21 @@ class Main():
         except Exception as e:
             return False, f"Proxy {proxy} test failed: {str(e)}"
 
-    def generateEmail(self, password="Qing762.chy"):
+    async def generateEmail(self, password="Qing762.chy"):
         if not hasattr(self, 'mailtm'):
             self.mailtm = MailTm()
-        
-        max_retries = 3
-        for attempt in range(max_retries):
+
+        maxRetries = 3
+        for attempt in range(maxRetries):
             try:
                 domainList = self.mailtm._get_domains_list()
                 if not domainList:
                     raise Exception("No domains available")
-                    
+
                 domain = random.choice(domainList)
                 username = self.generateUsername().lower()
                 address = f"{username}@{domain}"
-                
+
                 emailID = requests.post("https://api.mail.tm/accounts", json={"address": address, "password": password}, timeout=10)
                 if emailID.status_code == 201:
                     try:
@@ -447,17 +446,17 @@ class Main():
                     except (ValueError, KeyError) as json_error:
                         raise Exception(f"Invalid JSON response: {json_error}")
                 else:
-                    if attempt < max_retries - 1:
-                        print(f"Failed to create email with address {address}. Retrying attempt {attempt + 2}/{max_retries}...")
-                        time.sleep(5)
+                    if attempt < maxRetries - 1:
+                        print(f"Failed to create email with address {address}. Retrying attempt {attempt + 2}/{maxRetries}...")
+                        await asyncio.sleep(5)
                     else:
-                        raise Exception(f"Failed to create email after {max_retries} attempts")
+                        raise Exception(f"Failed to create email after {maxRetries} attempts")
             except Exception as e:
-                if attempt < max_retries - 1:
-                    print(f"Error creating email: {e}. Retrying attempt {attempt + 2}/{max_retries}...")
-                    time.sleep(5)
+                if attempt < maxRetries - 1:
+                    print(f"Error creating email: {e}. Retrying attempt {attempt + 2}/{maxRetries}...")
+                    await asyncio.sleep(5)
                 else:
-                    raise Exception(f"Failed to create email after {max_retries} attempts: {e}")
+                    raise Exception(f"Failed to create email after {maxRetries} attempts: {e}")
 
     def fetchVerification(self, address=None, password=None, emailID=None):
         if not address or not password or not emailID:
@@ -475,14 +474,14 @@ class Main():
                 analytics = input("\nNo personal data is collected, but anonymous usage statistics help us improve. Allow data collection? [y/n] (Default: Yes): ").strip().lower()
                 if analytics in ("y", "yes", ""):
                     userId = str(uuid.uuid4())
-                    with open("analytics.txt", "w", encoding="utf-8") as file:  # BUG FIX: Add encoding
+                    with open("analytics.txt", "w", encoding="utf-8") as file:
                         file.write("DO NOT CHANGE ANYTHING IN THIS FILE\n")
                         file.write("analytics=1\n")
                         file.write(f"userID={userId}\n")
                     print("Analytics collection enabled.")
                     return True
                 elif analytics in ("n", "no"):
-                    with open("analytics.txt", "w", encoding="utf-8") as file:  # BUG FIX: Add encoding
+                    with open("analytics.txt", "w", encoding="utf-8") as file:
                         file.write("DO NOT CHANGE ANYTHING IN THIS FILE\n")
                         file.write("analytics=0\n")
                     print("Analytics collection disabled.")
@@ -492,7 +491,7 @@ class Main():
 
     def checkAnalytics(self, version):
         try:
-            with open("analytics.txt", "r", encoding="utf-8") as file:  # BUG FIX: Add encoding
+            with open("analytics.txt", "r", encoding="utf-8") as file:
                 lines = file.readlines()
                 analytics = None
                 userId = None
@@ -520,7 +519,7 @@ class Main():
         if userId is None:
             userIdValue = None
             try:
-                with open("analytics.txt", "r", encoding="utf-8") as file:  # BUG FIX: Add encoding
+                with open("analytics.txt", "r", encoding="utf-8") as file:
                     for line in file:
                         if line.startswith("userID="):
                             userIdValue = line.strip().split("=", 1)[1]
@@ -529,7 +528,7 @@ class Main():
                 userIdValue = str(uuid.uuid4())
             userId = userIdValue or str(uuid.uuid4())
 
-        message = userId.encode('utf-8')  # BUG FIX: Explicit UTF-8 encoding
+        message = userId.encode('utf-8')
         signature = hmac.new(key, message, hashlib.sha256).hexdigest()
 
         data = {
@@ -559,10 +558,10 @@ class Main():
                     nouns = f.read().split()
                 with open(getResourcePath('lib/adjectives.txt'), 'r', encoding='utf-8') as f:
                     adjectives = f.read().split()
-                
+
                 if not verbs or not nouns or not adjectives:
                     raise ValueError("One or more word lists are empty")
-                    
+
                 verb = random.choice(verbs).strip()
                 noun = random.choice(nouns).strip()
                 adjective = random.choice(adjectives).strip()
@@ -581,25 +580,25 @@ class Main():
             gen = UsernameGenerator(10, 15)
             return gen.generate()
 
-    def followUser(self, user, tab):
+    async def followUser(self, user, tab):
         userIDList = []
         for x in user:
             try:
                 response = requests.post("https://users.roblox.com/v1/usernames/users", json={"usernames": [x]}, timeout=10)
                 response.raise_for_status()
                 data = response.json()
-                
+
                 if not data.get("data") or len(data["data"]) == 0:
                     print(f"User {x} not found!")
                     continue
-                    
+
                 userID = data["data"][0]["id"]
                 url = f"https://www.roblox.com/users/{userID}/profile"
                 tab.get(url)
-                
+
                 # Add some wait time for page to load
-                time.sleep(2)
-                
+                await asyncio.sleep(2)
+
                 try:
                     tab.ele("@class=MuiButtonBase-root MuiIconButton-root web-blox-css-tss-abxp79-IconButton-root profile-header-dropdown MuiIconButton-sizeMedium web-blox-css-mui-3cliw1", timeout=5).click()
                     tab.ele("@@class=MuiButtonBase-root MuiMenuItem-root web-blox-css-tss-1uppt56-MenuItem-root MuiMenuItem-gutters MuiMenuItem-root web-blox-css-tss-1uppt56-MenuItem-root MuiMenuItem-gutters web-blox-css-mui-1bwf1ry-Typography-body1@@id=follow-button", timeout=5).click()
@@ -609,8 +608,8 @@ class Main():
                     print(f"Could not find follow button for user {x}")
                 except Exception as e:
                     print(f"Error clicking follow button for user {x}: {e}")
-                    
-                time.sleep(0.5)
+
+                await asyncio.sleep(0.5)
             except requests.exceptions.Timeout:
                 print(f"Timeout when looking up user {x}")
             except requests.exceptions.RequestException as e:

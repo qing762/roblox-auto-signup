@@ -7,6 +7,8 @@ import sys
 import re
 import pyperclip
 import random
+import locale
+import gc
 from datetime import datetime
 from DrissionPage import Chromium, ChromiumOptions, errors
 from tqdm import TqdmExperimentalWarning
@@ -50,7 +52,7 @@ async def main():
                 "\nBrowser executable path: "
             ).replace('"', "").replace("'", "")
             if browserPath != "":
-                # BUG FIX: Add security validation for browser path
+
                 if any(char in browserPath for char in ['&', '|', ';', '$', '`', '(', ')', '{', '}', '[', ']']):
                     print("Invalid characters detected in browser path. Please enter a valid executable path.")
                 elif not browserPath.lower().endswith(('.exe', '.app', '.bin')) and os.name == 'nt':
@@ -69,7 +71,7 @@ async def main():
             if ungoogledChromiumUsage.lower() in ["y", "n", ""]:
                 if ungoogledChromiumUsage.lower() == "y" or ungoogledChromiumUsage == "":
                     ungoogled_path = lib.returnUngoogledChromiumPath()
-                    if ungoogled_path:  # BUG FIX: Check if path is not None
+                    if ungoogled_path:
                         co.set_browser_path(ungoogled_path)
                     break
                 else:
@@ -86,7 +88,7 @@ async def main():
                         "\nBrowser executable path: "
                     ).replace('"', "").replace("'", "")
                     if browserPath != "":
-                        # BUG FIX: Add security validation for browser path
+
                         if any(char in browserPath for char in ['&', '|', ';', '$', '`', '(', ')', '{', '}', '[', ']']):
                             print("Invalid characters detected in browser path. Please enter a valid executable path.")
                         elif not browserPath.lower().endswith(('.exe', '.app', '.bin')) and os.name == 'nt':
@@ -183,10 +185,10 @@ async def main():
         "\nLeave blank if none."
         "\nAPI Key: "
     ).strip()
-    
+
     # Basic validation for API key format and URL safety
     if captchaBypass:
-        # BUG FIX: Sanitize API key to prevent URL injection
+
         if not re.match(r'^[a-zA-Z0-9_-]+$', captchaBypass):
             print("Warning: API key contains invalid characters. Only letters, numbers, hyphens and underscores are allowed.")
             captchaBypass = ""
@@ -239,7 +241,7 @@ async def main():
         following = True
         followUserList = followUser.split(",")
         followUserList = [user.strip() for user in followUserList if user.strip()]
-        # BUG FIX: Validate usernames for security
+
         valid_followUserList = []
         for user in followUserList:
             if re.match(r'^[a-zA-Z0-9_]+$', user) and len(user) <= 20:
@@ -266,7 +268,7 @@ async def main():
         try:
             ungoogledPath = lib.returnUngoogledChromiumPath()
             if ungoogledPath:
-                # BUG FIX: Don't wrap with getResourcePath as ungoogledPath is already a relative path
+
                 co.set_browser_path(f"{ungoogledPath}/chrome.exe")
             else:
                 print("Warning: Could not find ungoogled chromium, using default browser")
@@ -320,16 +322,16 @@ async def main():
                 page.set.window.max()
             except Exception as e:
                 print(f"Failed to initialize browser: {e}")
-                bar.close()  # BUG FIX: Close progress bar before continuing
+                bar.close()
                 continue
 
             accountCookies = []
-            email = "N/A"
-            emailPassword = "N/A"
+            email = None
+            emailPassword = None
 
             if verification is True:
                 try:
-                    email, emailPassword, token, emailID = lib.generateEmail(passw)
+                    email, emailPassword, token, emailID = await lib.generateEmail(passw)
                     bar.set_description(f"Generated email [{x + 1}/{executionCount}]")
                     bar.update(10)
                 except Exception as e:
@@ -344,15 +346,14 @@ async def main():
                 try:
                     lang_result = page.run_js_loaded("return window.navigator.userLanguage || window.navigator.language")
                     lang = lang_result.split("-")[0] if lang_result and "-" in lang_result else "en"
-                except Exception:  # BUG FIX: Specify Exception instead of bare except
+                except Exception:
                     lang = "en"  # Default fallback
                 try:
                     page.ele('@class=btn-cta-lg cookie-btn btn-primary-md btn-min-width', timeout=3).click()
                 except errors.ElementNotFoundError:
                     pass
-                bdaymonthelement = page.ele("#MonthDropdown", timeout=10)  # BUG FIX: Added timeout
-                # BUG FIX: Use English month names regardless of system locale
-                import locale
+                bdaymonthelement = page.ele("#MonthDropdown", timeout=10)
+
                 old_locale = locale.getlocale(locale.LC_TIME)
                 try:
                     locale.setlocale(locale.LC_TIME, 'C')  # Use C locale for English month names
@@ -360,10 +361,10 @@ async def main():
                 finally:
                     try:
                         locale.setlocale(locale.LC_TIME, old_locale)
-                    except Exception:  # BUG FIX: Specify Exception instead of bare except
+                    except Exception:
                         pass  # If restoring fails, continue anyway
                 bdaymonthelement.select.by_value(currentMonth)
-                bdaydayelement = page.ele("#DayDropdown", timeout=10)  # BUG FIX: Added timeout
+                bdaydayelement = page.ele("#DayDropdown", timeout=10)
                 currentDay = datetime.now().day
                 # Try both formats - with and without leading zeros
                 try:
@@ -378,16 +379,16 @@ async def main():
                     except Exception as e2:
                         print(f"Warning: Could not set day to {currentDay}, using default. Errors: {e}, {e2}")
                 currentYear = datetime.now().year - 19
-                page.ele("#YearDropdown", timeout=10).select.by_value(str(currentYear))  # BUG FIX: Added timeout
-                page.ele("#signup-username", timeout=10).input(username)  # BUG FIX: Added timeout
-                page.ele("#signup-password", timeout=10).input(passw)  # BUG FIX: Added timeout
+                page.ele("#YearDropdown", timeout=10).select.by_value(str(currentYear))
+                page.ele("#signup-username", timeout=10).input(username)
+                page.ele("#signup-password", timeout=10).input(passw)
                 time.sleep(2)
                 try:
                     page.ele('@@id=signup-checkbox@@class=checkbox').click()
                 except errors.ElementNotFoundError:
                     pass
                 time.sleep(1)
-                page.ele("@@id=signup-button@@name=signupSubmit@@class=btn-primary-md signup-submit-button btn-full-width", timeout=10).click()  # BUG FIX: Added timeout
+                page.ele("@@id=signup-button@@name=signupSubmit@@class=btn-primary-md signup-submit-button btn-full-width", timeout=10).click()
                 bar.set_description(f"Signup submitted [{x + 1}/{executionCount}]")
                 bar.update(20)
 
@@ -408,7 +409,7 @@ async def main():
             except Exception as e:
                 print(f"\nAn error occurred\n{e}\n")
                 captchaPresence = False
-                
+
         # Handle case where max captcha retries reached
         if captchaRetries >= maxCaptchaRetries:
             print(f"Max captcha retries reached for account {x + 1}. Skipping this account.")
@@ -419,11 +420,11 @@ async def main():
                 print(f"Warning: Could not quit browser: {e}")
                 pass
             continue
-            
+
         if not captchaPresence:
             # Determine timeout based on captcha bypass usage
             timeout = 10 if captchaBypass == "" else 300
-            
+
             try:
                 if lang == "en":
                     page.wait.url_change("https://www.roblox.com/home", timeout=timeout)
@@ -451,22 +452,22 @@ async def main():
                         page.ele(".modal-button verification-upsell-btn btn-cta-md btn-min-width").click()
                         if page.ele(".verification-upsell-text-body", timeout=60):
                             link = None
-                            messages = []  # BUG FIX: Initialize messages to prevent NameError
-                            email_check_attempts = 0
-                            max_email_attempts = 30  # 30 attempts with 5 second intervals = 2.5 minutes
-                            while email_check_attempts < max_email_attempts:
+                            messages = []
+                            emailCheckAttempts = 0
+                            maxEmailAttempts = 30  # 30 attempts with 5 second intervals = 2.5 minutes
+                            while emailCheckAttempts < maxEmailAttempts:
                                 try:
                                     messages = lib.fetchVerification(email, emailPassword, emailID)
                                     if len(messages) > 0:
                                         break
                                     time.sleep(5)  # Wait 5 seconds between checks
-                                    email_check_attempts += 1
+                                    emailCheckAttempts += 1
                                 except Exception as e:
                                     print(f"Error checking email: {e}")
-                                    email_check_attempts += 1
+                                    emailCheckAttempts += 1
                                     time.sleep(5)
-                            
-                            if email_check_attempts >= max_email_attempts:
+
+                            if emailCheckAttempts >= maxEmailAttempts:
                                 print("Email verification timeout - no email received within expected time")
                                 bar.update(10)
                             elif messages and len(messages) > 0:
@@ -478,7 +479,7 @@ async def main():
                                     match = re.search(r'https://www\.roblox\.com/account/settings/verify-email\?ticket=[^\s)"]+', body)
                                     if match:
                                         link = match.group(0)
-                                
+
                                 if link:
                                     bar.set_description(
                                         f"Verifying email address [{x + 1}/{executionCount}]"
@@ -517,7 +518,7 @@ async def main():
                         bar.set_description(f"Following users [{x + 1}/{executionCount}]")
                         follow_error = None
                         try:
-                            userIDs = lib.followUser(followUserList, page)
+                            userIDs = await lib.followUser(followUserList, page)
                         except Exception as e:
                             print(f"An error occurred while following users: {e}")
                             follow_error = e
@@ -534,7 +535,7 @@ async def main():
                         bar.set_description(f"Finished account generation with errors [{x + 1}/{executionCount}]")
                     else:
                         bar.set_description(f"Finished account generation [{x + 1}/{executionCount}]")
-                    # BUG FIX: Prevent negative progress bar updates
+
                     remaining = max(0, 100 - bar.n)
                     if remaining > 0:
                         bar.update(remaining)
@@ -559,7 +560,7 @@ async def main():
                 if following is True:
                     bar.set_description(f"Following users [{x + 1}/{executionCount}]")
                     try:
-                        userIDs = lib.followUser(followUserList, page)
+                        userIDs = await lib.followUser(followUserList, page)
                     except Exception as e:
                         print(f"An error occurred while following users: {e}")
                     bar.update(10)
@@ -569,11 +570,11 @@ async def main():
                 chrome.set.cookies.clear()
                 chrome.clear_cache()
                 chrome.quit()
-                email = "N/A"
-                emailPassword = "N/A"
+                email = None
+                emailPassword = None
                 accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword, "cookies": accountCookies})
                 bar.set_description(f"Finished account generation [{x + 1}/{executionCount}]")
-                # BUG FIX: Prevent negative progress bar updates
+
                 remaining = max(0, 100 - bar.n)
                 if remaining > 0:
                     bar.update(remaining)
@@ -625,7 +626,7 @@ async def main():
         print(f"Error writing to cookies.json: {e}")
 
     for account in accounts:
-        print(f"Username: {account['username']}, Password: {'*' * len(account['password'])}, Email: {account['email']}, Email Password: {'*' * len(account['emailPassword']) if account['emailPassword'] != 'N/A' else 'N/A'}")  # BUG FIX: Mask passwords in console output
+        print(f"Username: {account['username']}, Password: {'*' * len(account['password'])}, Email: {account['email']}, Email Password: {'*' * len(account['emailPassword']) if account['emailPassword'] is not None else 'N/A'}")
     print("\033[0m" "\nCredentials saved to accounts.txt\nCookies are saved to cookies.json file\n\nHave fun playing Roblox!")
 
     accountManagerFormat = input(
@@ -665,11 +666,10 @@ if __name__ == "__main__":
         print("\n\nScript interrupted by user. Cleaning up...")
         try:
             # Try to quit any open browser instances
-            import gc
             gc.collect()
-        except Exception:  # BUG FIX: Specify Exception instead of bare except
+        except Exception:
             pass
-        print("Cleanup complete. Goodbye!")
+        print("Cleanup complete.")
     except Exception as e:
         print(f"\nUnexpected error occurred: {e}")
-        print("Please report this issue if it persists.")
+        print("Please report this issue at https://qing762.is-a.dev/discord if the error persists.")
