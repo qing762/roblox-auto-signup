@@ -33,11 +33,7 @@ jobs:
             $minor = [int]$matches[2]
             $patch = if ($matches[3]) { [int]$matches[3] } else { 0 }
 
-            if ($patch -eq 0) {
-              $newVersion = "v$major.$minor.0"
-              "v$major.$minor.0" | Out-File -FilePath version.txt -NoNewline -Encoding UTF8
-              echo "VERSION=$newVersion" >> $env:GITHUB_OUTPUT
-            } else {
+            {
               $patch++
               $newVersion = "v$major.$minor.$patch"
               $newVersion | Out-File -FilePath version.txt -NoNewline -Encoding UTF8
@@ -49,6 +45,7 @@ jobs:
         shell: pwsh
 
       - name: Commit version update
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -60,6 +57,14 @@ jobs:
             git push
           }
         shell: pwsh
+
+      - name: Create a new tag
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ steps.get_version.outputs.VERSION }}" -m "${{ steps.get_version.outputs.VERSION }}"
+          git push origin "${{ steps.get_version.outputs.VERSION }}"
 
       - name: Install dependencies
         run: |
@@ -79,12 +84,14 @@ jobs:
           pyinstaller --onefile --clean --add-data "version.py:." --add-data "lib/adjectives.txt:lib" --add-data "lib/nouns.txt:lib" --add-data "lib/verbs.txt:lib" --add-data "lib/NopeCHA:lib/NopeCHA" --add-data "$(python -c "import random_username, os; print(os.path.join(os.path.dirname(random_username.__file__), 'data'))")${{ runner.os == 'Windows' && ';' || ':' }}random_username/data" --name "roblox-auto-signup ${{ steps.get_version.outputs.VERSION }}.exe" main.py
 
       - name: Upload Executable
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
           name: Roblox Auto Signup ${{ steps.get_version.outputs.VERSION }}
           path: ./dist/roblox-auto-signup ${{ steps.get_version.outputs.VERSION }}.exe
   
       - name: Create a new tag
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -92,6 +99,7 @@ jobs:
           git push origin "${{ steps.get_version.outputs.VERSION }}"
 
       - name: Publish code
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         id: create_release
         uses: softprops/action-gh-release@v2.0.4
         with:
