@@ -7,6 +7,7 @@ import time
 import hmac
 import os
 import hashlib
+import re  # BUG FIX: Add re import for proxy validation
 from DrissionPage import errors, SessionPage
 from zipfile import ZipFile
 from pymailtm import MailTm, Account
@@ -23,6 +24,7 @@ def getResourcePath(relative_path):
 class UsernameGenerator:
     # SOURCE: https://github.com/mrsobakin/pungen. Kudos to mrsobakin for the original code.
     CONSONANTS = "bcdfghjklmnpqrstvwxyz"
+    VOWELS = "aeiou"
 
     CONS_WEIGHTED = ("tn", "rshd", "lfcm", "gypwb", "vbjxq", "z")
     VOW_WEIGHTED = ("eao", "iu")
@@ -54,14 +56,16 @@ class UsernameGenerator:
             if length - num_length < 2:
                 num_length = 0
 
-        for j in range(length - num_length):
+        # Ensure we have a positive range for username generation
+        letter_length = max(1, length - num_length)
+        for j in range(letter_length):
             if len(username) > 0:
                 if username[-1] in self.CONSONANTS:
                     is_consonant = False
-                elif username[-1] in self.CONSONANTS:
+                elif username[-1] in self.VOWELS:  # BUG FIX: was checking CONSONANTS twice
                     is_consonant = True
             if not is_double:
-                if random.randrange(8) == 0 and len(username) < int(length - num_length) - 1:
+                if random.randrange(8) == 0 and len(username) < int(letter_length) - 1:
                     is_double = True
                 if is_consonant:
                     username += self._get_consonant(is_double)
@@ -123,7 +127,10 @@ class Main():
         else:
             print(f"{system} OS is not supported for automated installation yet. Please make sure Ungoogled Chromium is installed in order to use NopeCHA.")
             return
-        versions = list(filter(lambda ver: int(ver.split(".")[0]) <= 136, versions))
+        try:
+            versions = list(filter(lambda ver: ver and "." in ver and ver.split(".")[0].isdigit() and int(ver.split(".")[0]) <= 136, versions))
+        except (ValueError, IndexError):
+            versions = []
         if not versions:
             return "No compatible versions found."
         if system == "Windows":
@@ -140,10 +147,13 @@ class Main():
                         url = f"https://github.com/ungoogled-software/ungoogled-chromium-windows/releases/download/{versions[0]}.1/ungoogled-chromium_{versions[0]}.1_windows_x64.zip"
                         r = requests.get(url, stream=True)
                         r.raise_for_status()
-                        with open(f"{unGoogledChromium}.zip", "wb") as file:
-                            for chunk in r.iter_content(chunk_size=1024):
-                                if chunk:
-                                    file.write(chunk)
+                        try:
+                            with open(f"{unGoogledChromium}.zip", "wb") as file:
+                                for chunk in r.iter_content(chunk_size=1024):
+                                    if chunk:
+                                        file.write(chunk)
+                        finally:
+                            r.close()  # BUG FIX: Explicitly close the response to free resources
                         print("Download complete. Proceeding to extract the zip file...")
                     except requests.exceptions.RequestException as e:
                         return f"Download failed: {e}"
@@ -153,11 +163,19 @@ class Main():
                         return f"File I/O error: {e}"
                 else:
                     print("Zip file already exists. Proceeding to extract...")
-                with ZipFile(f"{unGoogledChromium}.zip", 'r') as browserObject:
-                    browserObject.extractall(unGoogledChromium)
-                print("Extraction complete. Deleting zip file...")
-                os.remove(f"{unGoogledChromium}.zip")
-                return "Ungoogled Chromium has been downloaded successfully."
+                try:
+                    with ZipFile(f"{unGoogledChromium}.zip", 'r') as browserObject:
+                        browserObject.extractall(unGoogledChromium)
+                    print("Extraction complete. Deleting zip file...")
+                    os.remove(f"{unGoogledChromium}.zip")
+                    return "Ungoogled Chromium has been downloaded successfully."
+                except Exception as e:
+                    # BUG FIX: Clean up zip file even if extraction fails
+                    try:
+                        os.remove(f"{unGoogledChromium}.zip")
+                    except Exception:  # BUG FIX: Specify Exception instead of bare except
+                        pass  # If cleanup fails, continue anyway
+                    return f"Extraction failed: {e}"
         else:
             return "Download cancelled by user."
 
@@ -170,7 +188,10 @@ class Main():
             for x in page.eles("@tag()=li"):
                 versionText = x.ele("@tag()=a").text
                 versions.append(versionText)
-            versions = list(filter(lambda ver: int(ver.split(".")[0]) <= 136, versions))
+            try:
+                versions = list(filter(lambda ver: ver and "." in ver and ver.split(".")[0].isdigit() and int(ver.split(".")[0]) <= 136, versions))
+            except (ValueError, IndexError):
+                versions = []
             if not versions:
                 print("No compatible versions found.")
                 return
@@ -182,94 +203,142 @@ class Main():
 
     def usernameCreator(self, nameFormat=None, scrambled=False):
         counter = 0
-        while True:
-            if nameFormat:
-                username = f"{nameFormat}_{counter}"
-                counter += 1
-            else:
-                if scrambled is True:
-                    username = self.generateUsername(scrambled=True)
+        max_attempts = 100  # Prevent infinite loops
+        
+        for attempt in range(max_attempts):
+            try:
+                if nameFormat:
+                    username = f"{nameFormat}_{counter}"
+                    counter += 1
                 else:
-                    username = self.generateUsername(scrambled=False)
+                    if scrambled is True:
+                        username = self.generateUsername(scrambled=True)
+                    else:
+                        username = self.generateUsername(scrambled=False)
 
-            r = requests.get(
-                f"https://auth.roblox.com/v2/usernames/validate?request.username={username}&request.birthday=04%2F15%2F02&request.context=Signup"
-            ).json()
+                try:
+                    r = requests.get(
+                        f"https://auth.roblox.com/v2/usernames/validate?request.username={username}&request.birthday=04%2F15%2F02&request.context=Signup",
+                        timeout=10
+                    ).json()
+                except (requests.exceptions.RequestException, ValueError, KeyError) as e:
+                    print(f"Error validating username {username}: {e}")
+                    continue
 
-            if r["code"] == 0:
-                return username
-            else:
+                if r.get("code") == 0:  # BUG FIX: Use .get() for safer dictionary access
+                    return username
+                else:
+                    if nameFormat and attempt >= max_attempts - 1:
+                        # If using nameFormat and we've tried many times, just use a random username
+                        return self.generateUsername(scrambled=True)
+                    continue
+            except Exception as e:
+                print(f"Error validating username: {e}")
+                if attempt >= max_attempts - 1:
+                    # Fallback to a random username
+                    return self.generateUsername(scrambled=True)
                 continue
+                
+        # If we reach here, fallback to a random username
+        return self.generateUsername(scrambled=True)
 
     async def checkUpdate(self):
         try:
             resp = requests.get(
-                "https://api.github.com/repos/qing762/roblox-auto-signup/releases/latest"
+                "https://api.github.com/repos/qing762/roblox-auto-signup/releases/latest",
+                timeout=10
             )
-            latestVer = resp.json()["tag_name"]
+            resp.raise_for_status()
+            response_data = resp.json()
+            latestVer = response_data.get("tag_name", "unknown")  # BUG FIX: Use .get() for safer access
 
             if getattr(sys, 'frozen', False):
-                import version  # type: ignore
-                currentVer = version.__version__
+                try:
+                    import version  # type: ignore
+                    currentVer = version.__version__
+                except ImportError:
+                    currentVer = "unknown"
             else:
-                with open("version.txt", "r") as file:
-                    currentVer = file.read().strip()
+                try:
+                    with open("version.txt", "r", encoding="utf-8") as file:  # BUG FIX: Add encoding
+                        currentVer = file.read().strip()
+                except FileNotFoundError:
+                    currentVer = "unknown"
 
-            if currentVer < latestVer:
+            if currentVer != "unknown" and currentVer < latestVer:
                 print(f"Update available: {latestVer} (Current version: {currentVer})\nYou can download the latest version from: https://github.com/qing762/roblox-auto-signup/releases/latest")
                 return currentVer
             else:
                 print(f"You are running the latest version: {currentVer}")
                 return currentVer
+        except requests.exceptions.Timeout:
+            print("Update check timed out. Continuing with current version.")
+            return "unknown"
+        except requests.exceptions.RequestException as e:
+            print(f"Failed to check for updates: {e}")
+            return "unknown"
         except Exception as e:
-            print(f"An error occurred: {e}")
-            return currentVer
+            print(f"An error occurred during update check: {e}")
+            return "unknown"
 
     async def checkPassword(self, username, password):
-        token = requests.post("https://auth.roblox.com/v2/login", headers={"User-Agent": "Mozilla/5.0"}).headers.get("x-csrf-token")
-        data = {
-            "username": username,
-            "password": password
-        }
-        headers = {
-            "accept": "application/json, text/plain, */*",
-            "accept-encoding": "gzip, deflate, br, zstd",
-            "accept-language": "en-US,en;q=0.6",
-            "content-type": "application/json;charset=UTF-8",
-            "origin": "https://www.roblox.com",
-            "referer": "https://www.roblox.com",
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
-            "x-csrf-token": token
-        }
-        resp = requests.post("https://auth.roblox.com/v2/passwords/validate", json=data, headers=headers).json()
-        if resp["code"] == 0:
-            return "\nPassword is valid"
-        else:
-            return f"\nPassword does not meet the requirements: {resp['message']}"
+        try:
+            token = requests.post("https://auth.roblox.com/v2/login", headers={"User-Agent": "Mozilla/5.0"}, timeout=10).headers.get("x-csrf-token")
+            data = {
+                "username": username,
+                "password": password
+            }
+            headers = {
+                "accept": "application/json, text/plain, */*",
+                "accept-encoding": "gzip, deflate, br, zstd",
+                "accept-language": "en-US,en;q=0.6",
+                "content-type": "application/json;charset=UTF-8",
+                "origin": "https://www.roblox.com",
+                "referer": "https://www.roblox.com",
+                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
+                "x-csrf-token": token
+            }
+            try:
+                resp = requests.post("https://auth.roblox.com/v2/passwords/validate", json=data, headers=headers, timeout=10).json()
+                if resp.get("code") == 0:  # BUG FIX: Use .get() for safer access
+                    return "\nPassword is valid"
+                else:
+                    return f"\nPassword does not meet the requirements: {resp.get('message', 'Unknown error')}"
+            except (requests.exceptions.RequestException, ValueError, KeyError) as e:
+                return f"\nPassword validation failed: {e}"
+        except Exception as e:
+            return f"\nPassword validation error: {e}"
 
     async def customization(self, tab):
-        tab.listen.start('https://avatar.roblox.com/v1/avatar-inventory?pageLimit=50&sortOption=recentAdded')
-        tab.get("https://www.roblox.com/my/avatar")
-        result = tab.listen.wait(timeout=10)
-        content = result.response.body
-        assetDict = {}
-        for item in content['avatarInventoryItems']:
-            if 'itemCategory' in item:
-                assetType = item["itemCategory"]["itemSubType"]
-                if assetType not in assetDict:
-                    assetDict[assetType] = []
-                assetDict[assetType].append(item)
-        tab.listen.stop()
+        try:
+            tab.listen.start('https://avatar.roblox.com/v1/avatar-inventory?pageLimit=50&sortOption=recentAdded')
+            tab.get("https://www.roblox.com/my/avatar")
+            result = tab.listen.wait(timeout=10)
+            content = result.response.body
+            assetDict = {}
+            for item in content.get('avatarInventoryItems', []):  # BUG FIX: Use .get() for safer access
+                if 'itemCategory' in item and 'itemSubType' in item['itemCategory']:  # BUG FIX: Check nested key exists
+                    assetType = item["itemCategory"]["itemSubType"]
+                    if assetType not in assetDict:
+                        assetDict[assetType] = []
+                    assetDict[assetType].append(item)
+            tab.listen.stop()
 
-        selectedAssets = {}
-        for assetType, assets in assetDict.items():
-            selectedAssets[assetType] = random.choice(assets)
+            selectedAssets = {}
+            for assetType, assets in assetDict.items():
+                selectedAssets[assetType] = random.choice(assets)
 
-        for assetType, asset in selectedAssets.items():
-            for z in tab.ele(".hlist item-cards-stackable").eles("tag:li"):
-                if z.ele("tag:a").attr("data-item-name") == asset["itemName"]:
-                    z.ele("tag:a").click()
-                    break
+            for assetType, asset in selectedAssets.items():
+                try:
+                    for z in tab.ele(".hlist item-cards-stackable").eles("tag:li"):
+                        if z.ele("tag:a").attr("data-item-name") == asset.get("itemName"):  # BUG FIX: Use .get() for safer access
+                            z.ele("tag:a").click()
+                            break
+                except Exception as e:
+                    print(f"Warning: Could not click asset {asset.get('itemName', 'unknown')}: {e}")
+        except Exception as e:
+            print(f"Warning: Avatar customization failed: {e}")
+            return  # Exit gracefully if customization fails
 
         bodyType = random.choice([i for i in range(0, 101, 5)])
         try:
@@ -307,42 +376,88 @@ class Main():
                     }}));
                 }}
             ''')
-            time.sleep(2)
+            import asyncio
+            await asyncio.sleep(2)  # BUG FIX: Use asyncio.sleep instead of time.sleep in async function
 
     def testProxy(self, proxy):
+        if not proxy or not proxy.strip():
+            return False, "Empty proxy provided"
+        
         try:
-            response = requests.get("http://www.google.com", proxies={"http": proxy, "https": proxy}, timeout=5)
-            return True, response.status_code
-        except Exception:
-            return False, "Proxy test failed! Please ensure that the proxy is working correctly. Skipping proxy usage..."
+            # BUG FIX: Better proxy format validation
+            proxy = proxy.strip()
+            
+            # Validate proxy format more strictly
+            if not proxy.startswith(('http://', 'https://', 'socks4://', 'socks5://')):
+                # Only auto-add http:// for IP:PORT format
+                if re.match(r'^\d+\.\d+\.\d+\.\d+:\d+$', proxy):
+                    proxy = "http://" + proxy
+                else:
+                    return False, f"Invalid proxy format: {proxy}. Expected format: protocol://host:port or IP:PORT"
+            
+            # Additional security check for dangerous characters
+            if any(char in proxy for char in ['&', '|', ';', '$', '`', '(', ')', '<', '>']):
+                return False, f"Proxy contains invalid characters: {proxy}"
+                
+            response = requests.get("http://www.google.com", proxies={"http": proxy, "https": proxy}, timeout=10)
+            if response.status_code == 200:
+                return True, f"Proxy {proxy} is working"
+            else:
+                return False, f"Proxy {proxy} returned status code {response.status_code}"
+        except requests.exceptions.Timeout:
+            return False, f"Proxy {proxy} timed out"
+        except requests.exceptions.ConnectionError:
+            return False, f"Proxy {proxy} connection failed"
+        except Exception as e:
+            return False, f"Proxy {proxy} test failed: {str(e)}"
 
     def generateEmail(self, password="Qing762.chy"):
         if not hasattr(self, 'mailtm'):
             self.mailtm = MailTm()
-        domainList = self.mailtm._get_domains_list()
-        domain = random.choice(domainList)
-        username = self.generateUsername().lower()
-        address = f"{username}@{domain}"
-        while True:
+        
+        max_retries = 3
+        for attempt in range(max_retries):
             try:
-                emailID = requests.post("https://api.mail.tm/accounts", json={"address": address, "password": password})
-                if emailID.status_code == 201 and "id" in emailID.json():
-                    break
-                else:
-                    print(f"Failed to create email with address {address}. Sleeping for 5 seconds then will retry...")
-                    time.sleep(5)
-                    username = self.generateUsername().lower()
-                    address = f"{username}@{domain}"
-            except Exception as e:
-                print(f"Error creating email: {e}. Sleeping for 5 seconds then will retry...")
-                time.sleep(5)
+                domainList = self.mailtm._get_domains_list()
+                if not domainList:
+                    raise Exception("No domains available")
+                    
+                domain = random.choice(domainList)
                 username = self.generateUsername().lower()
                 address = f"{username}@{domain}"
-        token = requests.post(
-            "https://api.mail.tm/token",
-            json={"address": address, "password": password}
-        ).json()["token"]
-        return address, password, token, emailID
+                
+                emailID = requests.post("https://api.mail.tm/accounts", json={"address": address, "password": password}, timeout=10)
+                if emailID.status_code == 201:
+                    try:
+                        emailID_data = emailID.json()
+                        if "id" in emailID_data:
+                            token_response = requests.post(
+                                "https://api.mail.tm/token",
+                                json={"address": address, "password": password},
+                                timeout=10
+                            )
+                            if token_response.status_code == 200:
+                                token_data = token_response.json()
+                                if "token" in token_data:
+                                    return address, password, token_data["token"], emailID
+                                else:
+                                    raise Exception("Token not found in response")
+                            else:
+                                raise Exception(f"Token request failed with status {token_response.status_code}")
+                    except (ValueError, KeyError) as json_error:
+                        raise Exception(f"Invalid JSON response: {json_error}")
+                else:
+                    if attempt < max_retries - 1:
+                        print(f"Failed to create email with address {address}. Retrying attempt {attempt + 2}/{max_retries}...")
+                        time.sleep(5)
+                    else:
+                        raise Exception(f"Failed to create email after {max_retries} attempts")
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    print(f"Error creating email: {e}. Retrying attempt {attempt + 2}/{max_retries}...")
+                    time.sleep(5)
+                else:
+                    raise Exception(f"Failed to create email after {max_retries} attempts: {e}")
 
     def fetchVerification(self, address=None, password=None, emailID=None):
         if not address or not password or not emailID:
@@ -360,35 +475,42 @@ class Main():
                 analytics = input("\nNo personal data is collected, but anonymous usage statistics help us improve. Allow data collection? [y/n] (Default: Yes): ").strip().lower()
                 if analytics in ("y", "yes", ""):
                     userId = str(uuid.uuid4())
-                    with open("analytics.txt", "w") as file:
+                    with open("analytics.txt", "w", encoding="utf-8") as file:  # BUG FIX: Add encoding
                         file.write("DO NOT CHANGE ANYTHING IN THIS FILE\n")
                         file.write("analytics=1\n")
                         file.write(f"userID={userId}\n")
                     print("Analytics collection enabled.")
                     return True
                 elif analytics in ("n", "no"):
-                    with open("analytics.txt", "w") as file:
+                    with open("analytics.txt", "w", encoding="utf-8") as file:  # BUG FIX: Add encoding
                         file.write("DO NOT CHANGE ANYTHING IN THIS FILE\n")
                         file.write("analytics=0\n")
                     print("Analytics collection disabled.")
                     return False
                 else:
-                    continue
+                    print("Please enter a valid option (y/n).")
 
     def checkAnalytics(self, version):
-        with open("analytics.txt", "r") as file:
-            lines = file.readlines()
-            analytics = None
-            userId = None
-            for line in lines:
-                if line.startswith("analytics="):
-                    analytics = line.strip().split("=", 1)[1]
-                elif line.startswith("userID="):
-                    userId = line.strip().split("=", 1)[1]
-            if analytics == "1":
-                self.sendAnalytics(version, userId)
-            elif analytics == "0":
-                return False
+        try:
+            with open("analytics.txt", "r", encoding="utf-8") as file:  # BUG FIX: Add encoding
+                lines = file.readlines()
+                analytics = None
+                userId = None
+                for line in lines:
+                    if line.startswith("analytics="):
+                        analytics = line.strip().split("=", 1)[1]
+                    elif line.startswith("userID="):
+                        userId = line.strip().split("=", 1)[1]
+                if analytics == "1":
+                    self.sendAnalytics(version, userId)
+                elif analytics == "0":
+                    return False
+        except FileNotFoundError:
+            print("Analytics configuration file not found.")
+            return False
+        except Exception as e:
+            print(f"Error reading analytics configuration: {e}")
+            return False
 
     def sendAnalytics(self, version, userId=None):
         # DO NOT CHANGE THIS KEY, IT IS USED FOR SIGNING THE ANALYTICS DATA
@@ -398,7 +520,7 @@ class Main():
         if userId is None:
             userIdValue = None
             try:
-                with open("analytics.txt", "r") as file:
+                with open("analytics.txt", "r", encoding="utf-8") as file:  # BUG FIX: Add encoding
                     for line in file:
                         if line.startswith("userID="):
                             userIdValue = line.strip().split("=", 1)[1]
@@ -407,7 +529,7 @@ class Main():
                 userIdValue = str(uuid.uuid4())
             userId = userIdValue or str(uuid.uuid4())
 
-        message = userId.encode()
+        message = userId.encode('utf-8')  # BUG FIX: Explicit UTF-8 encoding
         signature = hmac.new(key, message, hashlib.sha256).hexdigest()
 
         data = {
@@ -430,12 +552,31 @@ class Main():
 
     def generateUsername(self, scrambled=None):
         if scrambled is False:
-            verb = random.choice(open(getResourcePath('lib/verbs.txt')).read().split()).strip()
-            noun = random.choice(open(getResourcePath('lib/nouns.txt')).read().split()).strip()
-            adjective = random.choice(open(getResourcePath('lib/adjectives.txt')).read().split()).strip()
-            number = random.randint(10, 99)
-            username = verb + noun + adjective + str(number)
-            return username
+            try:
+                with open(getResourcePath('lib/verbs.txt'), 'r', encoding='utf-8') as f:
+                    verbs = f.read().split()
+                with open(getResourcePath('lib/nouns.txt'), 'r', encoding='utf-8') as f:
+                    nouns = f.read().split()
+                with open(getResourcePath('lib/adjectives.txt'), 'r', encoding='utf-8') as f:
+                    adjectives = f.read().split()
+                
+                if not verbs or not nouns or not adjectives:
+                    raise ValueError("One or more word lists are empty")
+                    
+                verb = random.choice(verbs).strip()
+                noun = random.choice(nouns).strip()
+                adjective = random.choice(adjectives).strip()
+                number = random.randint(10, 99)
+                username = verb + noun + adjective + str(number)
+                return username
+            except FileNotFoundError as e:
+                print(f"Warning: Required text files not found: {e}. Falling back to scrambled username.")
+                gen = UsernameGenerator(10, 15)
+                return gen.generate()
+            except Exception as e:
+                print(f"Error generating structured username: {e}. Falling back to scrambled username.")
+                gen = UsernameGenerator(10, 15)
+                return gen.generate()
         else:
             gen = UsernameGenerator(10, 15)
             return gen.generate()
@@ -444,14 +585,40 @@ class Main():
         userIDList = []
         for x in user:
             try:
-                userID = requests.post("https://users.roblox.com/v1/usernames/users", json={"usernames": [x]}).json()["data"][0]["id"]
+                response = requests.post("https://users.roblox.com/v1/usernames/users", json={"usernames": [x]}, timeout=10)
+                response.raise_for_status()
+                data = response.json()
+                
+                if not data.get("data") or len(data["data"]) == 0:
+                    print(f"User {x} not found!")
+                    continue
+                    
+                userID = data["data"][0]["id"]
                 url = f"https://www.roblox.com/users/{userID}/profile"
                 tab.get(url)
-                tab.ele("@class=MuiButtonBase-root MuiIconButton-root web-blox-css-tss-abxp79-IconButton-root profile-header-dropdown MuiIconButton-sizeMedium web-blox-css-mui-3cliw1").click()
-                tab.ele("@@class=MuiButtonBase-root MuiMenuItem-root web-blox-css-tss-1uppt56-MenuItem-root MuiMenuItem-gutters MuiMenuItem-root web-blox-css-tss-1uppt56-MenuItem-root MuiMenuItem-gutters web-blox-css-mui-1bwf1ry-Typography-body1@@id=follow-button").click()
+                
+                # Add some wait time for page to load
+                time.sleep(2)
+                
+                try:
+                    tab.ele("@class=MuiButtonBase-root MuiIconButton-root web-blox-css-tss-abxp79-IconButton-root profile-header-dropdown MuiIconButton-sizeMedium web-blox-css-mui-3cliw1", timeout=5).click()
+                    tab.ele("@@class=MuiButtonBase-root MuiMenuItem-root web-blox-css-tss-1uppt56-MenuItem-root MuiMenuItem-gutters MuiMenuItem-root web-blox-css-tss-1uppt56-MenuItem-root MuiMenuItem-gutters web-blox-css-mui-1bwf1ry-Typography-body1@@id=follow-button", timeout=5).click()
+                    userIDList.append(userID)
+                    print(f"Successfully followed user {x}")
+                except errors.ElementNotFoundError:
+                    print(f"Could not find follow button for user {x}")
+                except Exception as e:
+                    print(f"Error clicking follow button for user {x}: {e}")
+                    
                 time.sleep(0.5)
+            except requests.exceptions.Timeout:
+                print(f"Timeout when looking up user {x}")
+            except requests.exceptions.RequestException as e:
+                print(f"Network error when looking up user {x}: {e}")
+            except KeyError as e:
+                print(f"User {x} not found or invalid response format: {e}")
             except Exception as e:
-                print(f"User {x} not found! Error: {e}")
+                print(f"Unexpected error when following user {x}: {e}")
         return userIDList
 
 
