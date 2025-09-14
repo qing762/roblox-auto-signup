@@ -56,13 +56,12 @@ class UsernameGenerator:
             if length - num_length < 2:
                 num_length = 0
 
-        # Ensure we have a positive range for username generation
         letterLength = max(1, length - num_length)
         for j in range(letterLength):
             if len(username) > 0:
                 if username[-1] in self.CONSONANTS:
                     is_consonant = False
-                elif username[-1] in self.VOWELS:  # BUG FIX: was checking CONSONANTS twice
+                elif username[-1] in self.VOWELS:
                     is_consonant = True
             if not is_double:
                 if random.randrange(8) == 0 and len(username) < int(letterLength) - 1:
@@ -110,7 +109,6 @@ class UsernameGenerator:
                 weight = 0
             else:
                 weight = 1
-            # return a random vowel based on the weight
             return self.VOW_WEIGHTED[weight][random.randrange(len(self.VOW_WEIGHTED[weight]))]
 
 
@@ -170,11 +168,10 @@ class Main():
                     os.remove(f"{unGoogledChromium}.zip")
                     return "Ungoogled Chromium has been downloaded successfully."
                 except Exception as e:
-                    # Clean up zip file even if extraction fails
                     try:
                         os.remove(f"{unGoogledChromium}.zip")
                     except Exception:
-                        pass  # If cleanup fails, continue anyway
+                        pass
                     return f"Extraction failed: {e}"
         else:
             return "Download cancelled by user."
@@ -203,7 +200,7 @@ class Main():
 
     def usernameCreator(self, nameFormat=None, scrambled=False):
         counter = 0
-        maxAttempts = 100  # Prevent infinite loops
+        maxAttempts = 100
 
         for attempt in range(maxAttempts):
             try:
@@ -229,17 +226,14 @@ class Main():
                     return username
                 else:
                     if nameFormat and attempt >= maxAttempts - 1:
-                        # If using nameFormat and we've tried many times, just use a random username
                         return self.generateUsername(scrambled=True)
                     continue
             except Exception as e:
                 print(f"Error validating username: {e}")
                 if attempt >= maxAttempts - 1:
-                    # Fallback to a random username
                     return self.generateUsername(scrambled=True)
                 continue
 
-        # If we reach here, fallback to a random username
         return self.generateUsername(scrambled=True)
 
     async def checkUpdate(self):
@@ -311,7 +305,7 @@ class Main():
 
     async def customization(self, tab):
         try:
-            tab.listen.start('https://avatar.roblox.com/v1/avatar-inventory?pageLimit=50&sortOption=recentAdded')
+            tab.listen.start('https://avatar.roblox.com/v1/avatar-inventory')
             tab.get("https://www.roblox.com/my/avatar")
             result = tab.listen.wait(timeout=10)
             content = result.response.body
@@ -338,7 +332,7 @@ class Main():
                     print(f"Warning: Could not click asset {asset.get('itemName', 'unknown')}: {e}")
         except Exception as e:
             print(f"Warning: Avatar customization failed: {e}")
-            return  # Exit gracefully if customization fails
+            return
 
         bodyType = random.choice([i for i in range(0, 101, 5)])
         try:
@@ -386,15 +380,12 @@ class Main():
 
             proxy = proxy.strip()
 
-            # Validate proxy format more strictly
             if not proxy.startswith(('http://', 'https://', 'socks4://', 'socks5://')):
-                # Only auto-add http:// for IP:PORT format
                 if re.match(r'^\d+\.\d+\.\d+\.\d+:\d+$', proxy):
                     proxy = "http://" + proxy
                 else:
                     return False, f"Invalid proxy format: {proxy}. Expected format: protocol://host:port or IP:PORT"
 
-            # Additional security check for dangerous characters
             if any(char in proxy for char in ['&', '|', ';', '$', '`', '(', ')', '<', '>']):
                 return False, f"Proxy contains invalid characters: {proxy}"
 
@@ -596,7 +587,6 @@ class Main():
                 url = f"https://www.roblox.com/users/{userID}/profile"
                 tab.get(url)
 
-                # Add some wait time for page to load
                 await asyncio.sleep(2)
 
                 try:
