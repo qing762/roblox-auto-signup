@@ -575,15 +575,25 @@ class Main():
         userIDList = []
         for x in user:
             try:
-                response = requests.post("https://users.roblox.com/v1/usernames/users", json={"usernames": [x]}, timeout=10)
-                response.raise_for_status()
-                data = response.json()
+                userID = None
+                # If numeric ID provided directly
+                if isinstance(x, str) and x.isdigit():
+                    userID = x
+                else:
+                    # Username path: resolve to user ID via API
+                    response = requests.post(
+                        "https://users.roblox.com/v1/usernames/users",
+                        json={"usernames": [x]},
+                        timeout=10
+                    )
+                    response.raise_for_status()
+                    data = response.json()
 
-                if not data.get("data") or len(data["data"]) == 0:
-                    print(f"User {x} not found!")
-                    continue
+                    if not data.get("data") or len(data["data"]) == 0:
+                        print(f"User {x} not found!")
+                        continue
+                    userID = data["data"][0]["id"]
 
-                userID = data["data"][0]["id"]
                 url = f"https://www.roblox.com/users/{userID}/profile"
                 tab.get(url)
 
