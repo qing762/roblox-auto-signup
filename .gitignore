@@ -18,3 +18,4 @@ testFile.bat
 analytics.txt
 ungoogled-chromium_*
 gui.py
+lib/library.py

@@ -351,13 +351,13 @@ async def main():
                     pass
                 bdaymonthelement = page.ele("#MonthDropdown", timeout=10)
 
-                old_locale = locale.getlocale(locale.LC_TIME)
+                oldLocale = locale.getlocale(locale.LC_TIME)
                 try:
                     locale.setlocale(locale.LC_TIME, 'C')
                     currentMonth = datetime.now().strftime("%b")
                 finally:
                     try:
-                        locale.setlocale(locale.LC_TIME, old_locale)
+                        locale.setlocale(locale.LC_TIME, oldLocale)
                     except Exception:
                         pass
                 bdaymonthelement.select.by_value(currentMonth)
@@ -485,50 +485,50 @@ async def main():
                             bar.set_description(f"Verification email not found [{x + 1}/{executionCount}]")
                             bar.update(10)
                     elif page.ele(".form-control input-field verification-upsell-modal-input"):
-                            page.ele(".form-control input-field verification-upsell-modal-input").input(email)
-                            page.ele(".modal-button verification-upsell-btn btn-cta-md btn-min-width").click()
-                            if page.ele(".verification-upsell-text-body", timeout=60):
-                                link = None
-                                messages = []
-                                emailCheckAttempts = 0
-                                maxEmailAttempts = 30
-                                while emailCheckAttempts < maxEmailAttempts:
-                                    try:
-                                        messages = lib.fetchVerification(email, emailPassword, emailID)
-                                        if len(messages) > 0:
-                                            break
-                                        await asyncio.sleep(5)
-                                        emailCheckAttempts += 1
-                                    except Exception as e:
-                                        print(f"Error checking email: {e}")
-                                        emailCheckAttempts += 1
-                                        await asyncio.sleep(5)
+                        page.ele(".form-control input-field verification-upsell-modal-input").input(email)
+                        page.ele(".modal-button verification-upsell-btn btn-cta-md btn-min-width").click()
+                        if page.ele(".verification-upsell-text-body", timeout=60):
+                            link = None
+                            messages = []
+                            emailCheckAttempts = 0
+                            maxEmailAttempts = 30
+                            while emailCheckAttempts < maxEmailAttempts:
+                                try:
+                                    messages = lib.fetchVerification(email, emailPassword, emailID)
+                                    if len(messages) > 0:
+                                        break
+                                    await asyncio.sleep(5)
+                                    emailCheckAttempts += 1
+                                except Exception as e:
+                                    print(f"Error checking email: {e}")
+                                    emailCheckAttempts += 1
+                                    await asyncio.sleep(5)
 
-                                if emailCheckAttempts >= maxEmailAttempts:
-                                    print("Email verification timeout - no email received within expected time")
-                                    bar.update(10)
-                                elif messages and len(messages) > 0:
-                                    msg = messages[0]
-                                    body = getattr(msg, 'text', None)
-                                    if not body and hasattr(msg, 'html') and msg.html and len(msg.html) > 0:
-                                        body = msg.html[0]
-                                    if body:
-                                        match = re.search(r'https://www\.roblox\.com/account/settings/verify-email\?ticket=[^\s)"]+', body)
-                                        if match:
-                                            link = match.group(0)
-
-                                    if link:
-                                        bar.set_description(
-                                            f"Verifying email address [{x + 1}/{executionCount}]"
-                                        )
-                                        bar.update(20)
-                                        page.get(link)
-                                    else:
-                                        bar.set_description(f"Email verification link not found [{x + 1}/{executionCount}]")
-                                        bar.update(10)
-                            else:
-                                bar.set_description(f"Verification email not found [{x + 1}/{executionCount}]")
+                            if emailCheckAttempts >= maxEmailAttempts:
+                                print("Email verification timeout - no email received within expected time")
                                 bar.update(10)
+                            elif messages and len(messages) > 0:
+                                msg = messages[0]
+                                body = getattr(msg, 'text', None)
+                                if not body and hasattr(msg, 'html') and msg.html and len(msg.html) > 0:
+                                    body = msg.html[0]
+                                if body:
+                                    match = re.search(r'https://www\.roblox\.com/account/settings/verify-email\?ticket=[^\s)"]+', body)
+                                    if match:
+                                        link = match.group(0)
+
+                                if link:
+                                    bar.set_description(
+                                        f"Verifying email address [{x + 1}/{executionCount}]"
+                                    )
+                                    bar.update(20)
+                                    page.get(link)
+                                else:
+                                    bar.set_description(f"Email verification link not found [{x + 1}/{executionCount}]")
+                                    bar.update(10)
+                        else:
+                            bar.set_description(f"Verification email not found [{x + 1}/{executionCount}]")
+                            bar.update(10)
 
                 except Exception as e:
                     print(f"\nAn error occurred during email verification\n{e}\n")
