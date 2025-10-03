@@ -6,6 +6,7 @@ import sys
 import re
 import pyperclip
 import random
+import string
 import locale
 import gc
 from datetime import datetime
@@ -17,6 +18,22 @@ from lib.lib import Main, getResourcePath
 
 warnings.filterwarnings("ignore", category=TqdmExperimentalWarning)
 warnings.filterwarnings("ignore", category=UserWarning, module="pkg_resources")
+
+
+def generate_password(length: int = 14) -> str:
+    """Generate a random password in the format: letters.numbers
+
+    Example: iascmc.9382
+    - letters: 5-8 random lowercase letters
+    - numbers: 3-5 random digits
+    """
+    letter_length = random.randint(5, 8)
+    letters = ''.join(random.choice(string.ascii_lowercase) for _ in range(letter_length))
+
+    number_length = random.randint(3, 5)
+    numbers = ''.join(random.choice(string.digits) for _ in range(number_length))
+
+    return f"{letters}.{numbers}"
 
 
 async def main():
@@ -71,7 +88,11 @@ async def main():
                 if ungoogledChromiumUsage.lower() == "y" or ungoogledChromiumUsage == "":
                     ungoogled_path = lib.returnUngoogledChromiumPath()
                     if ungoogled_path:
-                        co.set_browser_path(ungoogled_path)
+                        exe_path = os.path.join(ungoogled_path, 'chrome.exe') if os.name == 'nt' else os.path.join(ungoogled_path, 'chrome')
+                        if os.path.exists(exe_path):
+                            co.set_browser_path(exe_path)
+                        else:
+                            print(f"Warning: Ungoogled Chromium executable not found at {exe_path}. Using default browser path.")
                     break
                 else:
                     browserPath = input(
@@ -102,23 +123,37 @@ async def main():
             else:
                 print("\nPlease enter a valid option.")
 
+    # Password selection: random (default), default fixed, or custom with validation
+    password_choice = None
+    passw = None
+    password_use_random = False
     while True:
-        passw = (
-            input(
-                "\033[1m"
-                "\n(RECOMMENDED) Press enter in order to use the default password"
-                "\033[0m"
-                "\nThe password will be used for the account and email.\nIf you prefer to use your own password, do make sure that your password is strong enough.\nThis script has a built in password complexity checker.\nPassword: "
-            )
-            or "Qing762.chy"
-        )
-        if passw != "Qing762.chy":
-            result = await lib.checkPassword(lib.usernameCreator(), passw)
+        password_choice = input(
+            "\033[1m"
+            "\n(RECOMMENDED) Press enter to use random generated password"
+            "\033[0m"
+            "\n1. Press enter for random password (Format: randomletters.numbers, e.g., iascmc.9382)"
+            "\n2. Type 'default' for default password (Qing762.chy)"
+            "\n3. Enter your own custom password"
+            "\nPassword choice: "
+        ).strip()
+
+        if password_choice == "" or password_choice == "1":
+            password_use_random = True
+            # We will generate a unique password per account later
+            print("Random password mode selected. A unique password will be generated per account.")
+            break
+        elif password_choice.lower() == "default" or password_choice == "2":
+            passw = "Qing762.chy"
+            print("Using default password.")
+            break
+        else:
+            # Custom password with Roblox complexity validation
+            result = await lib.checkPassword(lib.usernameCreator(), password_choice)
             print(result)
             if "Password is valid" in result:
+                passw = password_choice
                 break
-        else:
-            break
 
     while True:
         verification = input(
@@ -165,9 +200,10 @@ async def main():
 
     followUser = input(
         "\nWould you like to follow any additional accounts after generating this account?\n"
-        "If yes, enter the usernames separated by commas (,).\n"
-        "Leave blank if none.\n"
-        "Usernames: "
+        "If yes, enter usernames, numeric user IDs, or profile URLs separated by commas (,).\n"
+        "Examples: Builderman, 156, https://www.roblox.com/users/156/profile\n"
+        "Leave blank to skip. If a file 'follow.txt' exists, it will be used.\n"
+        "Usernames / IDs / URLs: "
     )
 
     proxyUsage = input(
@@ -235,18 +271,38 @@ async def main():
     else:
         customization = False
 
+    # If input is blank, try to load from follow.txt
+    if followUser.strip() == "" and os.path.exists("follow.txt"):
+        try:
+            with open("follow.txt", "r", encoding="utf-8") as f:
+                lines = [ln.strip() for ln in f.readlines()]
+                followUser = ",".join([ln for ln in lines if ln])
+            print("Loaded follow list from follow.txt")
+        except Exception as e:
+            print(f"Failed to read follow.txt: {e}")
+
     if followUser != "":
         following = True
-        followUserList = followUser.split(",")
-        followUserList = [user.strip() for user in followUserList if user.strip()]
-
-        valid_followUserList = []
-        for user in followUserList:
-            if re.match(r'^[a-zA-Z0-9_]+$', user) and len(user) <= 20:
-                valid_followUserList.append(user)
-            else:
-                print(f"Invalid username '{user}' - usernames can only contain letters, numbers, and underscores (max 20 chars)")
-        followUserList = valid_followUserList
+        raw_follow_items = [user.strip() for user in followUser.split(",") if user.strip()]
+        followUserList = []
+        for item in raw_follow_items:
+            # Accept standard usernames
+            if re.fullmatch(r'[A-Za-z0-9_]{1,20}', item):
+                followUserList.append(item)
+                continue
+            # Accept numeric user IDs
+            if re.fullmatch(r'\d+', item):
+                followUserList.append(item)
+                continue
+            # Accept profile URLs and extract numeric ID
+            m = re.match(r'https?://www\.roblox\.com/users/(\d+)/profile', item)
+            if m:
+                followUserList.append(m.group(1))
+                continue
+            print(f"Invalid follow entry '{item}'. Use a username, numeric user ID, or a profile URL.")
+        # Deduplicate while preserving order
+        seen = set()
+        followUserList = [x for x in followUserList if not (x in seen or seen.add(x))]
         if not followUserList:
             print("No valid usernames found in follow list.")
             following = False
@@ -261,13 +317,24 @@ async def main():
     if (incognitoUsage.lower() == "y" or incognitoUsage == "") and captchaBypass == "":
         co.incognito()
 
+    # Use a dedicated user data folder to avoid conflicts with a running browser instance
+    try:
+        user_data_dir = os.path.join(os.getcwd(), 'user_data', f'run_{os.getpid()}')
+        os.makedirs(user_data_dir, exist_ok=True)
+        co.set_user_data_path(user_data_dir)
+    except Exception:
+        pass
+
     if captchaBypass != "":
         co.add_extension(getResourcePath("lib/NopeCHA"))
         try:
             ungoogledPath = lib.returnUngoogledChromiumPath()
             if ungoogledPath:
-
-                co.set_browser_path(f"{ungoogledPath}/chrome.exe")
+                exe_path = os.path.join(ungoogledPath, 'chrome.exe') if os.name == 'nt' else os.path.join(ungoogledPath, 'chrome')
+                if os.path.exists(exe_path):
+                    co.set_browser_path(exe_path)
+                else:
+                    print(f"Warning: Ungoogled Chromium executable not found at {exe_path}, using default browser.")
             else:
                 print("Warning: Could not find ungoogled chromium, using default browser")
         except Exception as e:
@@ -288,6 +355,10 @@ async def main():
     proxyNumber = len(usableProxies)
 
     for x in range(int(executionCount)):
+        # Determine the password for this account
+        current_password = generate_password() if password_use_random else passw
+        if password_use_random:
+            print(f"Generated password for account {x + 1}: {current_password}")
         captchaPresence = True
         captchaRetries = 0
         maxCaptchaRetries = 5
@@ -328,7 +399,7 @@ async def main():
 
             if verification is True:
                 try:
-                    email, emailPassword, token, emailID = await lib.generateEmail(passw)
+                    email, emailPassword, token, emailID = await lib.generateEmail(current_password)
                     bar.set_description(f"Generated email [{x + 1}/{executionCount}]")
                     bar.update(10)
                 except Exception as e:
@@ -376,7 +447,7 @@ async def main():
                 currentYear = datetime.now().year - 19
                 page.ele("#YearDropdown", timeout=10).select.by_value(str(currentYear))
                 page.ele("#signup-username", timeout=10).input(username)
-                page.ele("#signup-password", timeout=10).input(passw)
+                page.ele("#signup-password", timeout=10).input(current_password)
                 await asyncio.sleep(2)
                 try:
                     page.ele('@@id=signup-checkbox@@class=checkbox').click()
@@ -566,17 +637,17 @@ async def main():
                     chrome.set.cookies.clear()
                     chrome.clear_cache()
                     chrome.quit()
-                    accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword, "cookies": accountCookies})
+                accounts.append({"username": username, "password": current_password, "email": email, "emailPassword": emailPassword, "cookies": accountCookies})
 
-                    if 'follow_error' in locals() and follow_error is not None:
-                        bar.set_description(f"Finished account generation with errors [{x + 1}/{executionCount}]")
-                    else:
-                        bar.set_description(f"Finished account generation [{x + 1}/{executionCount}]")
+                if 'follow_error' in locals() and follow_error is not None:
+                    bar.set_description(f"Finished account generation with errors [{x + 1}/{executionCount}]")
+                else:
+                    bar.set_description(f"Finished account generation [{x + 1}/{executionCount}]")
 
-                    remaining = max(0, 100 - bar.n)
-                    if remaining > 0:
-                        bar.update(remaining)
-                    bar.close()
+                remaining = max(0, 100 - bar.n)
+                if remaining > 0:
+                    bar.update(remaining)
+                bar.close()
             else:
                 for i in page.cookies():
                     cookie = {
@@ -609,7 +680,7 @@ async def main():
                 chrome.quit()
                 email = None
                 emailPassword = None
-                accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword, "cookies": accountCookies})
+                accounts.append({"username": username, "password": current_password, "email": email, "emailPassword": emailPassword, "cookies": accountCookies})
                 bar.set_description(f"Finished account generation [{x + 1}/{executionCount}]")
 
                 remaining = max(0, 100 - bar.n)
