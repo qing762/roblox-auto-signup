@@ -6,6 +6,7 @@ import uuid
 import hmac
 import os
 import hashlib
+import shutil
 import re
 import asyncio
 from DrissionPage import errors, SessionPage
@@ -140,7 +141,7 @@ class Main():
             if system == "Windows":
                 if not os.path.exists(f"{unGoogledChromium}.zip"):
                     print(f"Downloading Ungoogled Chromium version {versions[0]} for Windows...")
-                    print("This may take a while, please be patient.... Please do not close the program/terminal.")
+                    print("This may take a while, please be patient....\nPlease do not close the program/terminal.")
                     try:
                         url = f"https://github.com/ungoogled-software/ungoogled-chromium-windows/releases/download/{versions[0]}.1/ungoogled-chromium_{versions[0]}.1_windows_x64.zip"
                         r = requests.get(url, stream=True)
@@ -162,14 +163,30 @@ class Main():
                 else:
                     print("Zip file already exists. Proceeding to extract...")
                 try:
+                    import shutil
+                    tempExtractDir = f"{unGoogledChromium}_temp"
+                    
                     with ZipFile(f"{unGoogledChromium}.zip", 'r') as browserObject:
-                        browserObject.extractall(unGoogledChromium)
+                        browserObject.extractall(tempExtractDir)
+
+                    extractedItems = os.listdir(tempExtractDir)
+                    if len(extractedItems) == 1 and os.path.isdir(os.path.join(tempExtractDir, extractedItems[0])):
+                        shutil.move(os.path.join(tempExtractDir, extractedItems[0]), unGoogledChromium)
+                        os.rmdir(tempExtractDir)
+                    else:
+                        os.makedirs(unGoogledChromium, exist_ok=True)
+                        for item in extractedItems:
+                            shutil.move(os.path.join(tempExtractDir, item), os.path.join(unGoogledChromium, item))
+                        os.rmdir(tempExtractDir)
+
                     print("Extraction complete. Deleting zip file...")
                     os.remove(f"{unGoogledChromium}.zip")
                     return "Ungoogled Chromium has been downloaded successfully."
                 except Exception as e:
                     try:
                         os.remove(f"{unGoogledChromium}.zip")
+                        if 'tempExtractDir' in locals() and os.path.exists(tempExtractDir):
+                            shutil.rmtree(tempExtractDir)
                     except Exception:
                         pass
                     return f"Extraction failed: {e}"

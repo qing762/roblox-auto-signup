@@ -51,12 +51,7 @@ async def main():
                 "\nBrowser executable path: "
             ).replace('"', "").replace("'", "")
             if browserPath != "":
-
-                if any(char in browserPath for char in ['&', '|', ';', '$', '`', '(', ')', '{', '}', '[', ']']):
-                    print("Invalid characters detected in browser path. Please enter a valid executable path.")
-                elif not browserPath.lower().endswith(('.exe', '.app', '.bin')) and os.name == 'nt':
-                    print("Browser path should end with .exe on Windows.")
-                elif os.path.exists(browserPath):
+                if os.path.exists(browserPath):
                     co.set_browser_path(browserPath)
                     break
                 else:
@@ -69,9 +64,10 @@ async def main():
             )
             if ungoogledChromiumUsage.lower() in ["y", "n", ""]:
                 if ungoogledChromiumUsage.lower() == "y" or ungoogledChromiumUsage == "":
-                    ungoogled_path = lib.returnUngoogledChromiumPath()
-                    if ungoogled_path:
-                        co.set_browser_path(ungoogled_path)
+                    ungoogledPath = lib.returnUngoogledChromiumPath()
+                    if ungoogledPath:
+                        print(f"Using Ungoogled Chromium at {ungoogledPath}/chrome.exe")
+                        co.set_browser_path(f"{ungoogledPath}/chrome.exe")
                     break
                 else:
                     browserPath = input(
@@ -186,7 +182,6 @@ async def main():
     ).strip()
 
     if captchaBypass:
-
         if not re.match(r'^[a-zA-Z0-9_-]+$', captchaBypass):
             print("Warning: API key contains invalid characters. Only letters, numbers, hyphens and underscores are allowed.")
             captchaBypass = ""
@@ -263,15 +258,6 @@ async def main():
 
     if captchaBypass != "":
         co.add_extension(getResourcePath("lib/NopeCHA"))
-        try:
-            ungoogledPath = lib.returnUngoogledChromiumPath()
-            if ungoogledPath:
-
-                co.set_browser_path(f"{ungoogledPath}/chrome.exe")
-            else:
-                print("Warning: Could not find ungoogled chromium, using default browser")
-        except Exception as e:
-            print(f"Warning: Could not set ungoogled chromium path: {e}")
 
     if proxyUsage.strip():
         proxyList = [proxy.strip() for proxy in proxyUsage.split(",") if proxy.strip()]
