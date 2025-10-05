@@ -66,7 +66,6 @@ async def main():
                 if ungoogledChromiumUsage.lower() == "y" or ungoogledChromiumUsage == "":
                     ungoogledPath = lib.returnUngoogledChromiumPath()
                     if ungoogledPath:
-                        print(f"Using Ungoogled Chromium at {ungoogledPath}/chrome.exe")
                         co.set_browser_path(f"{ungoogledPath}/chrome.exe")
                     break
                 else:
