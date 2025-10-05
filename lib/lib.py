@@ -23,7 +23,7 @@ def getResourcePath(relative_path):
 
 
 class UsernameGenerator:
-    # SOURCE: https://github.com/mrsobakin/pungen. Kudos to mrsobakin for the original code.
+    # SOURCE: https://github.com/mrsobakin/pungen. Kudos to @mrsobakin for the original code.
     CONSONANTS = "bcdfghjklmnpqrstvwxyz"
     VOWELS = "aeiou"
 
@@ -163,9 +163,8 @@ class Main():
                 else:
                     print("Zip file already exists. Proceeding to extract...")
                 try:
-                    import shutil
                     tempExtractDir = f"{unGoogledChromium}_temp"
-                    
+
                     with ZipFile(f"{unGoogledChromium}.zip", 'r') as browserObject:
                         browserObject.extractall(tempExtractDir)
 
