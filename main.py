@@ -22,6 +22,7 @@ warnings.filterwarnings("ignore", category=UserWarning, module="pkg_resources")
 async def main():
     lib = Main()
     co = ChromiumOptions()
+    co.set_argument("--lang", "en")
     co.auto_port().mute(True)
 
     print("Checking for updates...")
@@ -429,9 +430,55 @@ async def main():
                 try:
                     page.ele(".btn-primary-md btn-primary-md btn-min-width").click()
                     if page.ele("@@class=phone-verification-nonpublic-text text-description font-caption-body"):
-                        print("Found phone verification element, skipping email verification.\n")
-                        bar.update(20)
-                        bar.set_description(f"Skipping email verification [{x + 1}/{executionCount}]")
+                        print("Found phone verification element, trying alternative email verification.\n")
+                        page.get("https://www.roblox.com/my/account#!/info")
+                        page.ele("@@class=account-field-edit-action@@text()=Add Email").click()
+                        await asyncio.sleep(0.5)
+                        page.ele("@@id=emailAddress@@name=userInfo.emailAddress@@type=email@@class=form-control input-field@@placeholder=Enter email@@autocomplete=off").input(email)
+                        page.ele("@@class=modal-full-width-button btn-primary-md btn-min-width@@text()=Add Email").click()
+                        await asyncio.sleep(0.5)
+                        if page.ele("@@class=modal-body@@text()=An email has been sent for verification."):
+                            link = None
+                            messages = []
+                            emailCheckAttempts = 0
+                            maxEmailAttempts = 30
+                            while emailCheckAttempts < maxEmailAttempts:
+                                try:
+                                    messages = lib.fetchVerification(email, emailPassword, emailID)
+                                    if len(messages) > 0:
+                                        break
+                                    await asyncio.sleep(5)
+                                    emailCheckAttempts += 1
+                                except Exception as e:
+                                    print(f"Error checking email: {e}")
+                                    emailCheckAttempts += 1
+                                    await asyncio.sleep(5)
+
+                            if emailCheckAttempts >= maxEmailAttempts:
+                                print("Email verification timeout - no email received within expected time")
+                                bar.update(10)
+                            elif messages and len(messages) > 0:
+                                msg = messages[0]
+                                body = getattr(msg, 'text', None)
+                                if not body and hasattr(msg, 'html') and msg.html and len(msg.html) > 0:
+                                    body = msg.html[0]
+                                if body:
+                                    match = re.search(r'https://www\.roblox\.com/account/settings/verify-email\?ticket=[^\s)"]+', body)
+                                    if match:
+                                        link = match.group(0)
+
+                                if link:
+                                    bar.set_description(
+                                        f"Verifying email address [{x + 1}/{executionCount}]"
+                                    )
+                                    bar.update(20)
+                                    page.get(link)
+                                else:
+                                    bar.set_description(f"Email verification link not found [{x + 1}/{executionCount}]")
+                                    bar.update(10)
+                        else:
+                            bar.set_description(f"Verification email not found [{x + 1}/{executionCount}]")
+                            bar.update(10)
                     elif page.ele(". form-control input-field verification-upsell-modal-input"):
                         page.ele(". form-control input-field verification-upsell-modal-input").input(email)
                         page.ele(".modal-button verification-upsell-btn btn-cta-md btn-min-width").click()
