@@ -372,6 +372,14 @@ async def main():
                 bar.set_description(f"Signup submitted [{x + 1}/{executionCount}]")
                 bar.update(20)
 
+                if page.ele(".text-left korea-compliance-description-text-margin-left korea-compliance-description-text-margin-right small text", timeout=5):
+                    print("\nKorean compliance detected, accepting terms...\n")
+                    page.ele("@@id=compliance-privacy-policy-0@@class=checkbox").click()
+                    page.ele("@@id=compliance-privacy-policy-1@@class=checkbox").click()
+                    page.ele("@@id=compliance-privacy-policy-3@@class=checkbox").click()
+                    page.ele("@@id=compliance-privacy-policy-4@@class=checkbox").click()
+                    page.ele("@@id=signup-agreements-button@@class=btn-primary-md signup-submit-button btn-full-width@@name=signupAgreementsSubmit").click()
+
                 try:
                     captcha = page.get_frame('xpath://*[@id="arkose-iframe"]')
                     if captcha and proxyNumber >= 2 and captchaBypass != "":
