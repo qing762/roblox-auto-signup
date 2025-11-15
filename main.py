@@ -235,13 +235,13 @@ async def main():
         followUserList = followUser.split(",")
         followUserList = [user.strip() for user in followUserList if user.strip()]
 
-        valid_followUserList = []
+        validFollowUserList = []
         for user in followUserList:
             if re.match(r'^[a-zA-Z0-9_]+$', user) and len(user) <= 20:
-                valid_followUserList.append(user)
+                validFollowUserList.append(user)
             else:
                 print(f"Invalid username '{user}' - usernames can only contain letters, numbers, and underscores (max 20 chars)")
-        followUserList = valid_followUserList
+        followUserList = validFollowUserList
         if not followUserList:
             print("No valid usernames found in follow list.")
             following = False
@@ -593,12 +593,12 @@ async def main():
 
                     if following is True:
                         bar.set_description(f"Following users [{x + 1}/{executionCount}]")
-                        follow_error = None
+                        followError = None
                         try:
                             userIDs = await lib.followUser(followUserList, page)
                         except Exception as e:
                             print(f"An error occurred while following users: {e}")
-                            follow_error = e
+                            followError = e
                         bar.update(5)
 
                     page.set.cookies.clear()
@@ -608,7 +608,7 @@ async def main():
                     chrome.quit()
                     accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword, "cookies": accountCookies})
 
-                    if 'follow_error' in locals() and follow_error is not None:
+                    if 'followError' in locals() and followError is not None:
                         bar.set_description(f"Finished account generation with errors [{x + 1}/{executionCount}]")
                     else:
                         bar.set_description(f"Finished account generation [{x + 1}/{executionCount}]")
