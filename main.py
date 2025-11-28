@@ -1,6 +1,5 @@
 import asyncio
 import warnings
-import json
 import os
 import sys
 import re
@@ -280,9 +279,9 @@ async def main():
         while captchaPresence and captchaRetries < maxCaptchaRetries:
             if proxyUsage != "" and usableProxies:
                 try:
-                    selected_proxy = random.choice(usableProxies)
-                    co.set_proxy(selected_proxy)
-                    print(f"Using proxy: {selected_proxy}")
+                    selectedProxy = random.choice(usableProxies)
+                    co.set_proxy(selectedProxy)
+                    print(f"Using proxy: {selectedProxy}")
                 except Exception as e:
                     print(f"Error setting proxy: {e}")
 
@@ -593,12 +592,12 @@ async def main():
 
                     if following is True:
                         bar.set_description(f"Following users [{x + 1}/{executionCount}]")
-                        followError = None
+                        follow_error = None
                         try:
                             userIDs = await lib.followUser(followUserList, page)
                         except Exception as e:
                             print(f"An error occurred while following users: {e}")
-                            followError = e
+                            follow_error = e
                         bar.update(5)
 
                     page.set.cookies.clear()
@@ -606,9 +605,12 @@ async def main():
                     chrome.set.cookies.clear()
                     chrome.clear_cache()
                     chrome.quit()
-                    accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword, "cookies": accountCookies})
 
-                    if 'followError' in locals() and followError is not None:
+                    currentAccount = {"username": username, "password": passw, "email": email, "emailPassword": emailPassword, "cookies": accountCookies}
+                    accounts.append(currentAccount)
+                    await lib.saveAccount(currentAccount)
+
+                    if 'follow_error' in locals() and follow_error is not None:
                         bar.set_description(f"Finished account generation with errors [{x + 1}/{executionCount}]")
                     else:
                         bar.set_description(f"Finished account generation [{x + 1}/{executionCount}]")
@@ -649,7 +651,11 @@ async def main():
                 chrome.quit()
                 email = None
                 emailPassword = None
-                accounts.append({"username": username, "password": passw, "email": email, "emailPassword": emailPassword, "cookies": accountCookies})
+
+                currentAccount = {"username": username, "password": passw, "email": email, "emailPassword": emailPassword, "cookies": accountCookies}
+                accounts.append(currentAccount)
+                await lib.saveAccount(currentAccount)
+
                 bar.set_description(f"Finished account generation [{x + 1}/{executionCount}]")
 
                 remaining = max(0, 100 - bar.n)
@@ -661,46 +667,7 @@ async def main():
         print("No accounts were successfully created.")
         return
 
-    try:
-        with open("accounts.txt", "a", encoding="utf-8") as f:
-            for account in accounts:
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                f.write(
-                    f"Username: {account['username']}, Password: {account['password']}, Email: {account['email']}, Email Password: {account['emailPassword']} (Created at {timestamp})\n"
-                )
-    except Exception as e:
-        print(f"Error writing to accounts.txt: {e}")
-
     print("\033[1m" "Credentials:")
-
-    try:
-        with open("cookies.json", "r", encoding="utf-8") as file:
-            existingData = json.load(file)
-    except FileNotFoundError:
-        existingData = []
-    except Exception as e:
-        print(f"Error reading cookies.json: {e}")
-        existingData = []
-
-    accountsData = []
-
-    for account in accounts:
-        accountData = {
-            "username": account["username"],
-            "password": account["password"],
-            "email": account["email"],
-            "emailPassword": account["emailPassword"],
-            "cookies": account["cookies"]
-        }
-        accountsData.append(accountData)
-
-    existingData.extend(accountsData)
-
-    try:
-        with open("cookies.json", "w", encoding="utf-8") as jsonFile:
-            json.dump(existingData, jsonFile, indent=4)
-    except Exception as e:
-        print(f"Error writing to cookies.json: {e}")
 
     for account in accounts:
         print(f"Username: {account['username']}, Password: {'*' * len(account['password'])}, Email: {account['email']}, Email Password: {'*' * len(account['emailPassword']) if account['emailPassword'] is not None else 'N/A'}")
@@ -712,7 +679,7 @@ async def main():
     if accountManagerFormat.lower() in ["y", "yes"]:
         accountManagerFormatString = ""
 
-        for account in accountsData:
+        for account in accounts:
             roblosecurityCookie = None
             for cookie in account["cookies"]:
                 if cookie["name"] == ".ROBLOSECURITY":
