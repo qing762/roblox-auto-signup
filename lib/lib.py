@@ -628,6 +628,40 @@ class Main():
                 print(f"Unexpected error when following user {x}: {e}")
         return userIDList
 
+    async def saveAccount(self, account):
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        try:
+            with open("./accounts.txt", "a", encoding="utf-8") as f:
+                f.write(
+                    f"Username: {account['username']}, Password: {account['password']}, Email: {account['email']}, Email Password: {account['emailPassword']} (Created at {timestamp})\n"
+                )
+        except Exception as e:
+            print(f"Error writing to accounts.txt: {e}")
+
+        try:
+            with open("./cookies.json", "r", encoding="utf-8") as file:
+                existingData = json.load(file)
+        except FileNotFoundError:
+            existingData = []
+        except Exception as e:
+            print(f"Error reading cookies.json: {e}")
+            existingData = []
+
+        accountData = {
+            "username": account["username"],
+            "password": account["password"],
+            "email": account["email"],
+            "emailPassword": account["emailPassword"],
+            "cookies": account["cookies"]
+        }
+        existingData.append(accountData)
+
+        try:
+            with open("./cookies.json", "w", encoding="utf-8") as jsonFile:
+                json.dump(existingData, jsonFile, indent=4)
+        except Exception as e:
+            print(f"Error writing to cookies.json: {e}")
+
 
 if __name__ == "__main__":
     print("This is a library file. Please run main.py instead.")
