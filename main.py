@@ -382,13 +382,14 @@ async def main():
 
                 try:
                     captcha = page.get_frame('xpath://*[@id="arkose-iframe"]')
-                    if captcha and proxyNumber >= 2 and captchaBypass != "":
-                        print(f"Captcha detected for account {x + 1}, retrying... (Attempt {captchaRetries + 1}/{maxCaptchaRetries})")
-                        bar.close()
-                        chrome.quit()
+                    if captcha:
                         captchaPresence = True
-                        captchaRetries += 1
-                        continue
+                        if proxyNumber >= 2 and captchaBypass != "":
+                            print(f"Captcha detected for account {x + 1}, retrying... (Attempt {captchaRetries + 1}/{maxCaptchaRetries})")
+                            bar.close()
+                            chrome.quit()
+                            captchaRetries += 1
+                            continue
                     else:
                         captchaPresence = False
                 except errors.ElementNotFoundError:
@@ -517,6 +518,7 @@ async def main():
                                     )
                                     bar.update(20)
                                     page.get(link)
+                                    await asyncio.sleep(3)
                                 else:
                                     bar.set_description(f"Email verification link not found [{x + 1}/{executionCount}]")
                                     bar.update(10)

@@ -19,3 +19,5 @@ analytics.txt
 ungoogled-chromium_*
 gui.py
 lib/library.py
+config.txt
+config.txt.bak

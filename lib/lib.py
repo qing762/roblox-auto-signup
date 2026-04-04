@@ -323,7 +323,7 @@ class Main():
 
     async def customization(self, tab):
         try:
-            tab.listen.start('https://avatar.roblox.com/v1/avatar-inventory')
+            tab.listen.start('https://avatar.roblox.com/v1/avatar-inventory?sortOption=recentAdded&pageLimit=50')
             tab.get("https://www.roblox.com/my/avatar")
             result = tab.listen.wait(timeout=10)
             content = result.response.body
@@ -608,8 +608,8 @@ class Main():
                 await asyncio.sleep(2)
 
                 try:
-                    tab.ele("@class=MuiButtonBase-root MuiIconButton-root web-blox-css-tss-abxp79-IconButton-root profile-header-dropdown MuiIconButton-sizeMedium web-blox-css-mui-3cliw1", timeout=5).click()
-                    tab.ele("@@class=MuiButtonBase-root MuiMenuItem-root web-blox-css-tss-1uppt56-MenuItem-root MuiMenuItem-gutters MuiMenuItem-root web-blox-css-tss-1uppt56-MenuItem-root MuiMenuItem-gutters web-blox-css-mui-1bwf1ry-Typography-body1@@id=follow-button", timeout=5).click()
+                    tab.ele('xpath://*[@id="user-profile-header-contextual-menu-button"]', timeout=5).click()
+                    tab.ele('xpath://*[@id="radix-9"]/div/div/button[1]', timeout=5).click()
                     userIDList.append(userID)
                     print(f"Successfully followed user {x}")
                 except errors.ElementNotFoundError:
