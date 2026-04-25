@@ -27,8 +27,6 @@ async def main():
     print("Checking for updates...")
     version = await lib.checkUpdate()
 
-    lib.promptAnalytics()
-    print()
     lib.downloadUngoogledChromium()
 
     while True:
